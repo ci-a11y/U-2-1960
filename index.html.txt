@@ -1,0 +1,1681 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>U-2 Cold War 教學遊戲</title>
+
+  <style>
+:root{
+  --panel:rgba(0,0,0,.45);
+  --line:rgba(255,255,255,.18);
+  --text:#f6fbff;
+  --muted:rgba(246,251,255,.78);
+  --shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  background:#88c9ff;
+  color:var(--text);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans HK","PingFang HK","Microsoft JhengHei",sans-serif;
+}
+
+#wrap{ position:fixed; inset:0; }
+canvas{ width:100%; height:100%; display:block; background:#88c9ff; }
+
+#hud{ position:fixed; inset:0; pointer-events:none; padding-top: env(safe-area-inset-top); }
+.hudRow{
+  position:absolute;
+  left: calc(12px + env(safe-area-inset-left));
+  right: calc(12px + env(safe-area-inset-right));
+  top: calc(10px + env(safe-area-inset-top));
+  display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+}
+
+.badge{
+  display:inline-flex; align-items:center;
+  background:var(--panel); border:1px solid var(--line); border-radius:16px;
+  padding:10px 12px; box-shadow:var(--shadow); backdrop-filter: blur(8px);
+  max-width:72vw;
+}
+.badge.right{ max-width:360px; }
+.badge small{ color:var(--muted); }
+
+.badgeTop{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+.tag{
+  font-size:12px; color:rgba(255,255,255,.9);
+  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14);
+  padding:6px 10px; border-radius:999px; white-space:nowrap;
+}
+
+.bars{ display:flex; flex-direction:column; gap:8px; min-width:320px; }
+.barRow{ display:flex; flex-direction:column; gap:6px; }
+.bar{
+  height:10px; border-radius:999px; background:rgba(255,255,255,.16);
+  overflow:hidden; border:1px solid rgba(255,255,255,.16);
+}
+.bar > i{ display:block; height:100%; width:50%; background:linear-gradient(90deg, #69f0ae, #ffd166); }
+
+#toast{
+  position:fixed; left:50%; top:64px; transform:translateX(-50%);
+  background:var(--panel); border:1px solid var(--line); border-radius:16px;
+  padding:10px 14px; box-shadow:var(--shadow); backdrop-filter: blur(8px);
+  opacity:0; transition:opacity .2s ease; pointer-events:none;
+  max-width:min(560px, 92vw); text-align:center; font-size:14px;
+}
+#toast.show{ opacity:1; }
+
+#controls{ position:fixed; inset:0; pointer-events:none; z-index:5; }
+.pad{
+  position:absolute; bottom: calc(14px + env(safe-area-inset-bottom));
+  left:12px;
+  display:flex; gap:10px; pointer-events:auto;
+  flex-wrap:wrap; max-width:320px;
+}
+.pad.right{
+  left:auto;
+  right: calc(12px + env(safe-area-inset-right));
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  flex-direction:column; align-items:flex-end;
+}
+
+.vbtn{
+  width:64px; height:64px; border-radius:18px;
+  background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.18);
+  box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center;
+  user-select:none; -webkit-user-select:none; touch-action:none; backdrop-filter: blur(8px);
+}
+.vbtn.big{ width:82px; height:82px; border-radius:24px; background:rgba(0,0,0,.30); }
+.vtxt{ text-align:center; }
+.vbtn .ico{ font-size:18px; line-height:1; }
+.vbtn small{ display:block; font-size:12px; color:rgba(255,255,255,.88); margin-top:2px; }
+.vbtn:active{ transform:scale(.98); }
+
+/* ===== Virtual Joystick ===== */
+#joystick{
+  position:fixed;
+  left: calc(18px + env(safe-area-inset-left));
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  width:140px;
+  height:140px;
+  border-radius:50%;
+  background:rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.25);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  backdrop-filter: blur(8px);
+  pointer-events:auto;
+}
+#stick{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:56px;
+  height:56px;
+  margin-left:-28px;
+  margin-top:-28px;
+  border-radius:50%;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 6px 16px rgba(0,0,0,.45);
+  touch-action:none;
+}
+
+/* Quiz modal */
+#modal{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55); backdrop-filter: blur(8px); z-index:10;
+}
+#modal.show{ display:flex; }
+
+.card{
+  width:min(760px, 92vw);
+  border-radius:22px; background:rgba(0,0,0,.78);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 18px 60px rgba(0,0,0,.40); overflow:hidden;
+}
+.cardHead{
+  padding:16px 18px 10px; border-bottom:1px solid rgba(255,255,255,.14);
+  display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+}
+.tagRow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.qTitle{ margin:0; font-size:18px; line-height:1.35; }
+.qSub{ margin:6px 0 0; color:rgba(255,255,255,.86); font-size:13px; }
+.tiny{ font-size:12px; color:rgba(255,255,255,.72); margin-top:8px; }
+
+.cardBody{ padding:14px 16px 18px; }
+.options{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; }
+.optBtn{
+  width:100%; text-align:left; border-radius:16px;
+  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+  padding:12px 12px; color:var(--text); cursor:pointer;
+  transition:transform .06s ease, background .15s ease; font-size:15px;
+}
+.optBtn:hover{ background:rgba(255,255,255,.14); }
+.optBtn:active{ transform:scale(.99); }
+
+.feedback{
+  margin-top:12px; font-size:14px; padding:10px 12px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.14); display:none;
+}
+.feedback.good{ display:block; background:rgba(105,240,174,.14); border-color:rgba(105,240,174,.30); }
+.feedback.bad{ display:block; background:rgba(255,80,80,.14); border-color:rgba(255,80,80,.30); }
+.hintBox{ margin-top:10px; color:rgba(255,255,255,.86); font-size:13px; line-height:1.45; }
+.actions{ margin-top:14px; display:flex; justify-content:flex-end; gap:10px; }
+.pill{ border-radius:999px; padding:10px 14px; background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18); color:var(--text); cursor:pointer; }
+.pill:active{ transform:scale(.99); }
+
+/* Start overlay */
+#screenOverlay{
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.15);
+  z-index:8;
+}
+#screenOverlay.hidden{ display:none; }
+
+.panel{
+  width:min(860px, 92vw);
+  border-radius:26px; background:rgba(0,0,0,.72);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 20px 80px rgba(0,0,0,.35);
+  padding:18px 18px 16px; backdrop-filter: blur(10px);
+}
+.panel h1{ margin:0; font-size:22px; line-height:1.25; }
+.panel p{ margin:10px 0 0; color:rgba(255,255,255,.88); line-height:1.55; font-size:14px; }
+
+.grid2{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; }
+@media (min-width:720px){ .grid2{ grid-template-columns:1.1fr .9fr; } }
+.kbox{ border-radius:18px; border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.10); padding:12px 12px; color:rgba(255,255,255,.90);
+  font-size:13px; line-height:1.5; }
+.kbox b{ color:#fff; }
+
+.ctaRow{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-top:14px; }
+.cta{ border-radius:999px; padding:10px 14px;
+  background:rgba(105,240,174,.18); border:1px solid rgba(105,240,174,.30);
+  color:#fff; cursor:pointer; }
+.cta.secondary{ background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.18); }
+.cta:active{ transform:scale(.99); }
+
+/* 手機：只縮短左邊說明，不影響右邊 BAR */
+@media (max-width: 680px){
+  #hud .badge:not(.right){ max-width: 62vw; }
+  #hud .badge:not(.right) small{ display:none; }
+  #hud .badge:not(.right) b{ font-size: 13px; }
+}
+
+/* 橫屏時顯示提示遮罩（鎖直屏玩法） */
+#rotateOverlay{
+  position:fixed; inset:0; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+}
+#rotateOverlay .rotCard{
+  width:min(520px, 92vw);
+  background:rgba(0,0,0,.72);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;
+  padding:16px;
+  text-align:center;
+  backdrop-filter: blur(10px);
+}
+#rotateOverlay b{ display:block; font-size:18px; margin-bottom:6px; }
+#rotateOverlay small{ color:rgba(255,255,255,.88); line-height:1.5; }
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape){
+  #rotateOverlay{ display:flex; }
+}
+  </style>
+</head>
+
+<body>
+
+<div id="wrap">
+  <canvas id="c"></canvas>
+</div>
+
+<div id="hud">
+  <div class="hudRow">
+    <div class="badge">
+      <div>
+        <div class="badgeTop">
+          <b>U-2 突破任務（前方＝上）</b>
+          <span class="tag" id="slowTag" style="display:none;">操控減速中</span>
+          <span class="tag" id="invertTag" style="display:none;">上下反轉中</span>
+          <span class="tag" id="invulTag" style="display:none;">短暫無敵</span>
+        </div>
+        <small>中彈扣 Hull｜補給要答 MC｜撞機扣 Collision</small>
+      </div>
+    </div>
+
+    <div class="badge right">
+      <div class="bars">
+        <div class="barRow">
+          <small>機身耐久 (Hull)</small>
+          <div class="bar"><i id="hullBar"></i></div>
+        </div>
+
+        <div class="barRow">
+          <small>撞擊損耗 (Collision)</small>
+          <div class="bar"><i id="colBar"></i></div>
+        </div>
+
+        <div class="barRow">
+          <small>燃料 (Fuel)</small>
+          <div class="bar"><i id="fuelBar"></i></div>
+        </div>
+
+        <small id="dist">0 km</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Mobile controls: joystick + fire only -->
+<div id="controls">
+  <div id="joystick">
+    <div id="stick"></div>
+  </div>
+
+  <div class="pad right">
+    <div class="vbtn big" data-btn="fire">
+      <div class="vtxt">
+        <div class="ico">●</div>
+        <small>射擊</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz modal -->
+<div id="modal">
+  <div class="card">
+    <div class="cardHead">
+      <div class="headLeft">
+        <div class="tagRow">
+          <span class="tag" id="qTag">冷戰</span>
+          <span class="tag" id="qTriggerTag">事件：—</span>
+        </div>
+        <h2 class="qTitle" id="qTitle">問題</h2>
+        <p class="qSub" id="qSub">選擇最佳答案。</p>
+      </div>
+      <div class="headRight">
+        <div class="tag" id="qProgress">題目 1</div>
+        <div class="tiny">（遊戲暫停）</div>
+      </div>
+    </div>
+
+    <div class="cardBody">
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="hintBox" id="hintBox"></div>
+      <div class="actions">
+        <button class="pill" id="continueBtn" style="display:none;">繼續任務</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Start / End overlay -->
+<div id="screenOverlay">
+  <div class="panel">
+    <h1>《1960年 U-2 擊墜事件》直向突破（教學版）</h1>
+    <p>
+      前方＝上。你要操控 U-2 直向突破防空網。<br/>
+      <b>中彈</b>：Hull -1/6 + 小爆炸 + 操控減速 5 秒（唔答題）<br/>
+      <b>燃料/維修補給</b>：食到會彈 MC，答啱 +1/6，答錯 -1/6<br/>
+      <b>撞敵機</b>：Collision -1/3 + 小爆炸（可致命）
+    </p>
+
+    <div class="grid2">
+      <div class="kbox">
+        <b>手機操作</b><br/>
+        左下：拖動搖桿（上下左右）<br/>
+        右下：● 射擊<br/><br/>
+        <b>電腦操作（保留）</b><br/>
+        方向鍵：移動｜Space：射擊
+      </div>
+      <div class="kbox">
+        <b>敵機耐力</b><br/>
+        Drone：2下｜Heli：3下｜Fighter：5下<br/><br/>
+        <b>敵機標記</b><br/>
+        Drone：X 十字｜Heli：條紋｜Fighter：V 標記
+      </div>
+    </div>
+
+    <div class="ctaRow">
+      <button class="cta secondary" id="practiceBtn">只練題（安全模式）</button>
+      <button class="cta" id="startBtn">開始任務</button>
+    </div>
+    <div class="tiny">Canvas｜Vanilla JS｜單檔｜手機+電腦可玩｜直屏玩法</div>
+  </div>
+</div>
+
+<!-- Landscape lock overlay -->
+<div id="rotateOverlay">
+  <div class="rotCard">
+    <b>請使用直向模式遊玩</b>
+    <small>為了獲得最佳遊戲體驗，建議在手機／平板裝置上以直向模式遊玩。</small>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  // HUD
+  const hullBarEl = document.getElementById('hullBar');
+  const fuelBarEl = document.getElementById('fuelBar');
+  const colBarEl  = document.getElementById('colBar');
+  const distEl = document.getElementById('dist');
+  const toastEl = document.getElementById('toast');
+
+  const slowTag  = document.getElementById('slowTag');
+  const invertTag = document.getElementById('invertTag');
+  const invulTag = document.getElementById('invulTag');
+
+  // Overlays
+  const overlay = document.getElementById('screenOverlay');
+  const startBtn = document.getElementById('startBtn');
+  const practiceBtn = document.getElementById('practiceBtn');
+
+  const rotateOverlay = document.getElementById('rotateOverlay');
+  const rotateOverlaySmall = rotateOverlay?.querySelector('small');
+
+  // Quiz modal
+  const modal = document.getElementById('modal');
+  const qTitleEl = document.getElementById('qTitle');
+  const qSubEl = document.getElementById('qSub');
+  const qTagEl = document.getElementById('qTag');
+  const qTriggerTag = document.getElementById('qTriggerTag');
+  const qProgressEl = document.getElementById('qProgress');
+  const optionsEl = document.getElementById('options');
+  const feedbackEl = document.getElementById('feedback');
+  const hintBoxEl = document.getElementById('hintBox');
+  const continueBtn = document.getElementById('continueBtn'); // 保留（但唔再用）
+
+  // Mobile controls
+  const joystick = document.getElementById('joystick');
+  const stick = document.getElementById('stick');
+
+  // Helpers
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const rand  = (a, b) => a + Math.random() * (b - a);
+
+  // Detect mobile (robust signal first, UA fallback)
+  const isMobile =
+    matchMedia("(hover: none) and (pointer: coarse)").matches ||
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+  // Bookish line requested (mobile only)
+  if (isMobile && rotateOverlaySmall) {
+    rotateOverlaySmall.textContent = "為了獲得最佳遊戲體驗，建議在手機／平板裝置上以直向模式遊玩。";
+  }
+
+  // Reduce browser gesture conflicts
+  canvas.style.touchAction = "none";
+  joystick.style.touchAction = "none";
+
+  // Best-effort portrait lock (iOS may ignore)
+  async function tryLockPortrait(){
+    try{
+      if(screen.orientation && screen.orientation.lock){
+        await screen.orientation.lock("portrait");
+      }
+    }catch(e){}
+  }
+  window.addEventListener('pointerdown', tryLockPortrait, { once:true });
+
+  // Input state
+  const input = {
+    up:false, down:false, left:false, right:false,
+    fire:false,
+    joyX:0, joyY:0
+  };
+  const setBtn = (name, down) => { input[name] = down; };
+
+  function resetInput(){
+    input.up=input.down=input.left=input.right=false;
+    input.fire=false;
+    input.joyX=0; input.joyY=0;
+    stick.style.transform = `translate(0,0)`;
+  }
+
+  function toast(msg, ms=1600){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toastEl.classList.remove('show'), ms);
+  }
+
+  // ===== Portrait viewport lock (mobile portrait only) =====
+  const PORTRAIT_RATIO = 9 / 16;
+  const MIN_GAMEPLAY_W = 320;
+
+  // Game state
+  const S = {
+    dpr: 1,
+    running:false,
+    paused:false,
+    practice:false,
+    blockedByRotate:false,
+
+    last: performance.now(),
+    t:0,
+    km:0,
+    _prevKm:0,
+    goalKm: 40,
+
+    // ===== SCORE SYSTEM (C: mixed) =====
+    score: 0,
+    streak: 0,
+    streakT: 0, // seconds left for streak window
+
+    scroll: 235,
+    invert:0,
+    slowTimer:0,
+    invul:0,
+
+    p: { x:0,y:0,r:24, fuel:100,maxFuel:100, hull:100,maxHull:100, col:100,maxCol:100, fireCd:0 },
+
+    enemies: [],
+    eBullets: [],
+    pBullets: [],
+    fuels: [],
+    repairs: [],
+    clouds: [],
+    particles: [],
+
+    quizQueue: [],
+    curQ:null,
+    resolve:null,
+    stats:{asked:0, correct:0},
+
+    banner:{text:"",t:0,kind:"info"},
+
+    // Virtual gameplay viewport inside canvas
+    view: { W: 0, H: 0, ox: 0, oy: 0 },
+
+    // ✅ quiz memory for tap-to-continue
+    _lastQuizOk: false
+  };
+
+  function showBanner(text, kind="info", seconds=1.1){
+    S.banner.text=text; S.banner.kind=kind; S.banner.t=seconds;
+  }
+
+  function addScore(points, label=""){
+    points = Math.floor(points);
+    if(!points) return;
+    S.score = Math.max(0, S.score + points);
+
+    // small feedback banner (optional)
+    if(label){
+      const kind = points > 0 ? "good" : "bad";
+      showBanner(`${points>0?"+":""}${points} ${label}`, kind, 0.85);
+    }
+  }
+
+  function setViewport(){
+    const CW = canvas.width;
+    const CH = canvas.height;
+
+    if (isMobile && CH >= CW) {
+      let targetW = Math.min(CW, CH * PORTRAIT_RATIO);
+      const minW = MIN_GAMEPLAY_W * S.dpr;
+      targetW = Math.max(targetW, Math.min(CW, minW));
+
+      S.view.W = targetW;
+      S.view.H = CH;
+      S.view.ox = (CW - targetW) * 0.5;
+      S.view.oy = 0;
+    } else {
+      S.view.W = CW;
+      S.view.H = CH;
+      S.view.ox = 0;
+      S.view.oy = 0;
+    }
+  }
+
+  function resize(){
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(innerWidth * dpr);
+    canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width = innerWidth + "px";
+    canvas.style.height = innerHeight + "px";
+    S.dpr = dpr;
+    setViewport();
+  }
+
+  // Mobile portrait enforcement overlay (mobile landscape blocks gameplay)
+  function updateOrientationGate(){
+    if(!rotateOverlay) return;
+
+    if(isMobile){
+      const landscape = innerWidth > innerHeight;
+      if(landscape){
+        rotateOverlay.style.display = "flex";
+        S.blockedByRotate = true;
+        resetInput();
+      }else{
+        rotateOverlay.style.display = "none";
+        S.blockedByRotate = false;
+      }
+    }else{
+      rotateOverlay.style.display = "none";
+      S.blockedByRotate = false;
+    }
+  }
+
+  // Stability: avoid stuck inputs / dt spikes
+  addEventListener('blur', () => resetInput());
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){
+      resetInput();
+    }else{
+      S.last = performance.now();
+    }
+  });
+
+  // Prevent long-press context menu on mobile controls/canvas
+  window.addEventListener('contextmenu', (e) => {
+    if (e.target === canvas || e.target === joystick || e.target?.closest?.('#controls')) {
+      e.preventDefault();
+    }
+  }, { passive:false });
+
+  // Resize handlers
+  addEventListener('resize', () => {
+    resize();
+    initBackground();
+    updateOrientationGate();
+  });
+  addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      resize();
+      initBackground();
+      updateOrientationGate();
+    }, 60);
+  });
+
+  // Keyboard controls
+  addEventListener('keydown', (e)=>{
+    if(e.repeat) return;
+    if(e.code==='ArrowUp' || e.code==='KeyW') setBtn('up', true);
+    if(e.code==='ArrowDown' || e.code==='KeyS') setBtn('down', true);
+    if(e.code==='ArrowLeft' || e.code==='KeyA') setBtn('left', true);
+    if(e.code==='ArrowRight' || e.code==='KeyD') setBtn('right', true);
+    if(e.code==='Space') setBtn('fire', true);
+  });
+  addEventListener('keyup', (e)=>{
+    if(e.code==='ArrowUp' || e.code==='KeyW') setBtn('up', false);
+    if(e.code==='ArrowDown' || e.code==='KeyS') setBtn('down', false);
+    if(e.code==='ArrowLeft' || e.code==='KeyA') setBtn('left', false);
+    if(e.code==='ArrowRight' || e.code==='KeyD') setBtn('right', false);
+    if(e.code==='Space') setBtn('fire', false);
+  });
+
+  // Fire button (mobile)
+  document.querySelectorAll('[data-btn]').forEach(btn=>{
+    const name = btn.dataset.btn;
+    const down = (e)=>{ e.preventDefault(); setBtn(name,true); };
+    const up   = (e)=>{ e.preventDefault(); setBtn(name,false); };
+    btn.addEventListener('pointerdown', down, {passive:false});
+    btn.addEventListener('pointerup', up, {passive:false});
+    btn.addEventListener('pointercancel', up, {passive:false});
+    btn.addEventListener('pointerleave', up, {passive:false});
+    btn.addEventListener('lostpointercapture', up, {passive:false});
+  });
+
+  // Virtual joystick (rect center + pointerId safe for multi-touch)
+  let joyActive = false;
+  let joyCenter = {x:0, y:0};
+  let joyPointerId = null;
+  const joyRadius = 60;
+
+  joystick.addEventListener('pointerdown', e=>{
+    joyActive = true;
+    joyPointerId = e.pointerId;
+    const r = joystick.getBoundingClientRect();
+    joyCenter = { x: r.left + r.width/2, y: r.top + r.height/2 };
+    joystick.setPointerCapture(joyPointerId);
+    e.preventDefault();
+  }, {passive:false});
+
+  window.addEventListener('pointermove', e=>{
+    if(!joyActive || e.pointerId !== joyPointerId) return;
+
+    let dx = e.clientX - joyCenter.x;
+    let dy = e.clientY - joyCenter.y;
+
+    const dist = Math.hypot(dx,dy);
+    if(dist > joyRadius){
+      dx = dx/dist * joyRadius;
+      dy = dy/dist * joyRadius;
+    }
+
+    stick.style.transform = `translate(${dx}px, ${dy}px)`;
+    input.joyX = dx / joyRadius;
+    input.joyY = dy / joyRadius;
+    e.preventDefault();
+  }, {passive:false});
+
+  function endJoy(pointerId){
+    if(pointerId !== joyPointerId) return;
+    joyActive = false;
+    joyPointerId = null;
+    stick.style.transform = `translate(0,0)`;
+    input.joyX = 0;
+    input.joyY = 0;
+  }
+  window.addEventListener('pointerup', (e)=> endJoy(e.pointerId));
+  window.addEventListener('pointercancel', (e)=> endJoy(e.pointerId));
+  window.addEventListener('lostpointercapture', (e)=> endJoy(e.pointerId));
+
+  // ===== Question bank =====
+  const QB = [
+    { topic:"冷戰形式", q:"以下邊一項最能代表「冷戰」而唔係「熱戰」？",
+      c:["兩陣營直接宣戰、大規模地面戰","以軍備競賽、結盟、宣傳與間諜角力","以殖民地獨立戰爭為主","以海盜劫船為主"],
+      a:1, e:"冷戰避免全面直接開戰，但透過軍備、同盟、宣傳、間諜、經濟援助等方式對抗。" },
+    { topic:"冷戰形式", q:"「代理人戰爭（proxy war）」最貼近以下邊個例子？",
+      c:["美蘇直接在歐洲決戰","兩大陣營在第三世界支持不同勢力交戰","兩國簽署互不侵犯條約","兩國停止所有軍事研究"],
+      a:1, e:"代理戰：大國避免正面開戰，改在第三地區支援盟友／代理勢力。" },
+    { topic:"冷戰形式", q:"北約與華沙公約組織最主要反映冷戰嘅咩形式？",
+      c:["全球殖民擴張","軍事同盟對峙","宗教改革衝突","封建割據"],
+      a:1, e:"兩大軍事同盟令陣營化加劇，形成安全困境。" },
+    { topic:"冷戰形式", q:"以下邊一項最符合「軍備競賽」？",
+      c:["互相減少核武並公開裁軍","不斷研發更強武器以維持嚇阻與優勢","用文化交流取代外交","停止所有外交"],
+      a:1, e:"軍備競賽：為嚇阻對手而持續擴充武器，令緊張升溫。" },
+    { topic:"冷戰形式", q:"U-2 高空偵察任務本質上屬於哪種冷戰方式？",
+      c:["間諜／情報戰","宗教戰爭","殖民地戰爭","貿易戰"],
+      a:0, e:"U-2 係典型情報戰：偵察軍力部署，但被揭發會引爆主權與互信危機。" },
+
+    { topic:"冷戰原因", q:"冷戰爆發最根本嘅結構性原因通常被概括為：",
+      c:["科技落後","意識形態對立與戰後權力真空","人口過剩","天災頻仍"],
+      a:1, e:"二戰後美蘇成超級大國，制度對立＋權力真空引致長期對峙。" },
+    { topic:"冷戰原因", q:"「安全困境」最貼近以下邊個描述？",
+      c:["一方加強防衛，對方誤以為進攻而加碼軍備","兩方完全互信","兩方永久裁軍","所有衝突都源於宗教"],
+      a:0, e:"安全困境：我方防衛升級→對方感威脅→再升級，形成惡性循環。" },
+    { topic:"冷戰原因", q:"遏制政策（containment）主要針對：",
+      c:["遏制共產主義擴張","推動封建復辟","支持法西斯復興","停止外交"],
+      a:0, e:"遏制政策：阻止共產勢力擴張，係冷戰早期核心政策。" },
+    { topic:"冷戰原因", q:"馬歇爾計劃在冷戰背景下常被理解為：",
+      c:["純粹慈善","經濟援助以穩定西歐並鞏固陣營","擴張殖民地","促進蘇聯加入資本主義"],
+      a:1, e:"援助除重建外，亦鞏固西歐陣營並抵抗共產影響。" },
+    { topic:"冷戰原因", q:"點解情報戰（如U-2）反而可能加劇危機？",
+      c:["情報永遠令關係更和諧","被揭發會觸發主權與信任危機","偵察同軍事無關","必然導致和平"],
+      a:1, e:"偵察減少不確定，但一旦被揭發，主權／互信受挫，危機升級。" },
+  ];
+
+  // ===== Background =====
+  function initBackground(){
+    const W=S.view.W, H=S.view.H;
+    S.clouds.length=0;
+    for(let i=0;i<16;i++){
+      S.clouds.push({
+        x: rand(-100*S.dpr, W+100*S.dpr),
+        y: rand(-H, H),
+        w: rand(220, 520)*S.dpr,
+        h: rand(70, 160)*S.dpr,
+        a: rand(0.55, 0.85),
+        vx: rand(-16, 16)*S.dpr
+      });
+    }
+  }
+
+  function updateHUD(){
+    hullBarEl.style.width = `${(S.p.hull/S.p.maxHull*100).toFixed(1)}%`;
+    colBarEl.style.width  = `${(S.p.col/S.p.maxCol*100).toFixed(1)}%`;
+    fuelBarEl.style.width = `${(S.p.fuel/S.p.maxFuel*100).toFixed(1)}%`;
+    distEl.textContent = `Score ${S.score}｜${Math.round(S.km)} km`;
+  }
+
+  function reset(){
+    S.t=0; S.km=0; S._prevKm=0;
+    S.scroll = (S.practice? 210 : 225) * S.dpr;
+
+    S.invert=0; S.slowTimer=0; S.invul=0;
+
+    S.score=0; S.streak=0; S.streakT=0;
+
+    S.p.x = S.view.W*0.5;
+    S.p.y = S.view.H*0.72;
+    S.p.r = 24*S.dpr;
+    S.p.fuel = S.p.maxFuel = 100;
+    S.p.hull = S.p.maxHull = 100;
+    S.p.col  = S.p.maxCol  = 100;
+    S.p.fireCd = 0;
+
+    S.enemies.length=0;
+    S.eBullets.length=0;
+    S.pBullets.length=0;
+    S.fuels.length=0;
+    S.repairs.length=0;
+    S.particles.length=0;
+
+    S.quizQueue.length=0;
+    S.curQ=null; S.resolve=null;
+    S.stats={asked:0, correct:0};
+    S.banner={text:"",t:0,kind:"info"};
+
+    // ✅ quiz click-to-continue gate reset
+    modal.dataset.ready = "0";
+    S._lastQuizOk = false;
+
+    initBackground();
+    updateHUD();
+    resetInput();
+  }
+
+  function start(practice){
+    S.practice=!!practice;
+    overlay.classList.add('hidden');
+    S.running=true;
+    S.paused=false;
+    reset();
+    toast(S.practice ? "安全模式：敵人更少，專注補給題" : "任務開始：向上突破防空網！");
+  }
+  startBtn.onclick=()=>start(false);
+  practiceBtn.onclick=()=>start(true);
+
+  function end(win){
+    S.running=false;
+    resetInput();
+
+    if(win){
+      // survival/finish bonus
+      addScore(500 + Math.round(S.p.hull + S.p.fuel), "通關獎勵");
+    }
+
+    const asked=S.stats.asked, correct=S.stats.correct;
+    const rate=asked?Math.round(correct/asked*100):0;
+
+    const title = win ? "✅ 任務成功：改寫結局（避開射擊）" : "❌ 任務失敗：被擊落/燃料耗盡/損耗過大";
+    const debrief = win
+      ? "你成功避開防空火力。討論：情報戰如何影響互信與談判？"
+      : "維修/燃料不足或損耗過大。討論：安全困境如何令對峙升級？";
+
+    overlay.innerHTML = `
+      <div class="panel">
+        <h1>${title}</h1>
+        <p>${debrief}</p>
+        <div class="grid2">
+          <div class="kbox">
+            <b>表現</b><br/>
+            分數：${S.score}<br/>
+            距離：${Math.round(S.km)} km / ${S.goalKm} km<br/>
+            補給題：${correct} / ${asked}（${rate}%）
+          </div>
+          <div class="kbox">
+            <b>系統狀態</b><br/>
+            Hull：${Math.round(S.p.hull)}%｜Collision：${Math.round(S.p.col)}%｜Fuel：${Math.round(S.p.fuel)}%
+          </div>
+        </div>
+        <div class="ctaRow">
+          <button class="cta secondary" id="replayBtn">再玩一次</button>
+          <button class="cta" id="replayPracticeBtn">只練題（安全模式）</button>
+        </div>
+      </div>
+    `;
+    overlay.classList.remove('hidden');
+    document.getElementById('replayBtn').onclick=()=>{ overlay.classList.add('hidden'); S.running=true; S.practice=false; reset(); toast("重新開始！"); };
+    document.getElementById('replayPracticeBtn').onclick=()=>{ overlay.classList.add('hidden'); S.running=true; S.practice=true; reset(); toast("安全模式"); };
+  }
+
+  // ===== Quiz =====
+  function pickQ(){
+    if(S.quizQueue.length===0){
+      const idx=[...Array(QB.length).keys()];
+      for(let i=idx.length-1;i>0;i--){
+        const j=(Math.random()*(i+1))|0;
+        [idx[i],idx[j]]=[idx[j],idx[i]];
+      }
+      S.quizQueue=idx;
+    }
+    return QB[S.quizQueue.pop()];
+  }
+
+  // ✅ NEW: tap anywhere to continue (with 0.25s delay)
+  function continueQuiz(){
+    if(!modal.classList.contains('show')) return;
+    if(modal.dataset.ready !== "1") return;
+
+    modal.classList.remove('show');
+    modal.dataset.ready = "0";
+
+    const cb = S.resolve;
+    const ok = S._lastQuizOk;
+
+    S.curQ = null;
+    S.resolve = null;
+
+    resetInput();
+    S.paused = false;
+
+    cb && cb(ok);
+  }
+
+  modal.addEventListener('pointerdown', (e)=>{
+    if(modal.dataset.ready === "1"){
+      e.preventDefault();
+      continueQuiz();
+    }
+  }, {passive:false});
+
+  function openQuiz(trigger, cb){
+    S.paused=true;
+    resetInput();
+
+    const q=pickQ();
+    S.curQ=q;
+    S.resolve=cb;
+    S.stats.asked++;
+
+    qTitleEl.textContent=q.q;
+    qSubEl.textContent="選擇最佳答案（答案後有重點解釋）。";
+    qTagEl.textContent=q.topic;
+    qTriggerTag.textContent="事件："+trigger;
+    qProgressEl.textContent=`題目 ${S.stats.asked}（已答啱 ${S.stats.correct}）`;
+
+    feedbackEl.style.display="none";
+    feedbackEl.className="feedback";
+    hintBoxEl.innerHTML="";
+    continueBtn.style.display="none";
+    optionsEl.innerHTML="";
+
+    // ✅ lock tap-to-continue until answered
+    modal.dataset.ready = "0";
+
+    q.c.forEach((t,i)=>{
+      const btn=document.createElement('button');
+      btn.className="optBtn";
+      btn.innerHTML=`<b style="margin-right:8px;">${["A","B","C","D"][i]}.</b>${t}`;
+      btn.onclick=()=>answer(i);
+      optionsEl.appendChild(btn);
+    });
+
+    modal.classList.add('show');
+  }
+
+  function answer(i){
+    const q=S.curQ;
+    [...optionsEl.querySelectorAll('button')].forEach(b=>b.disabled=true);
+    const ok = (i===q.a);
+
+    if(ok){
+      S.stats.correct++;
+      feedbackEl.className="feedback good";
+      feedbackEl.textContent="✅ 正確！";
+    }else{
+      feedbackEl.className="feedback bad";
+      feedbackEl.textContent=`❌ 唔啱。正確答案：${["A","B","C","D"][q.a]}`;
+    }
+    feedbackEl.style.display="block";
+    hintBoxEl.innerHTML=`<b>重點：</b>${q.e}`;
+
+    // ✅ store ok for continueQuiz
+    S._lastQuizOk = ok;
+
+    // ✅ Quiz scoring (same as you had)
+    if(ok) addScore(120, "答啱");
+    else   addScore(20, "已作答");
+
+    // ✅ no more small button
+    continueBtn.style.display = "none";
+
+    // ✅ 0.25s anti-mistap, then tap anywhere to continue
+    modal.dataset.ready = "0";
+    setTimeout(()=>{ modal.dataset.ready = "1"; }, 250);
+  }
+
+  // ===== Particles =====
+  function spawnExplosion(x,y, power=1, warm=true){
+    const n = Math.floor(18*power);
+    for(let i=0;i<n;i++){
+      const ang = rand(0, Math.PI*2);
+      const sp  = rand(80, 380)*S.dpr*power;
+      S.particles.push({
+        x,y,
+        vx: Math.cos(ang)*sp,
+        vy: Math.sin(ang)*sp,
+        life: rand(0.25, 0.55),
+        r: rand(2.2, 5.8)*S.dpr*power,
+        warm
+      });
+    }
+  }
+
+  function updateParticles(dt){
+    for(const p of S.particles){
+      p.life -= dt;
+      p.x += p.vx*dt;
+      p.y += p.vy*dt;
+      p.vx *= (1 - 2.2*dt);
+      p.vy *= (1 - 2.2*dt);
+    }
+    S.particles = S.particles.filter(p=>p.life>0);
+  }
+
+  function applyControlSlow(seconds=5){
+    S.slowTimer = Math.max(S.slowTimer, seconds);
+    showBanner("操控變慢", "warn", 1.0);
+  }
+
+  function doBulletHit(x,y){
+    const delta = S.p.maxHull/6;
+    S.p.hull = clamp(S.p.hull - delta, 0, S.p.maxHull);
+    spawnExplosion(x,y, 0.9, true);
+    showBanner("中彈：Hull -1/6", "bad", 1.2);
+    applyControlSlow(5);
+
+    // small penalty (mixed mode)
+    addScore(-30, "受損");
+
+    // reset streak on damage
+    S.streak=0; S.streakT=0;
+
+    if(S.p.hull<=0) end(false);
+  }
+
+  function doCollision(x,y){
+    if(S.invul>0) return;
+    const delta = S.p.maxCol/3;
+    S.p.col = clamp(S.p.col - delta, 0, S.p.maxCol);
+    spawnExplosion(x,y, 1.15, false);
+    showBanner("撞擊：Collision -1/3", "bad", 1.2);
+    S.invul = 1.0;
+    applyControlSlow(1.2);
+
+    addScore(-60, "撞擊");
+    S.streak=0; S.streakT=0;
+
+    if(S.p.col<=0) end(false);
+  }
+
+  function fire(){
+    if(S.p.fireCd>0) return;
+    S.p.fireCd=0.26;
+    S.pBullets.push({x:S.p.x, y:S.p.y - 34*S.dpr, vy:-860*S.dpr, r:3.8*S.dpr});
+  }
+
+  function circleHit(ax,ay,ar, bx,by,br){
+    const dx=ax-bx, dy=ay-by;
+    const rr=ar+br;
+    return dx*dx+dy*dy <= rr*rr;
+  }
+
+  // ===== Spawns =====
+  function spawnEnemy(){
+    const W=S.view.W;
+    const r=Math.random();
+    const type = (r<0.46) ? "DRONE" : (r<0.78 ? "HELI" : "FIGHTER");
+    const hp = (type==="DRONE") ? 2 : (type==="HELI" ? 3 : 4);
+    const baseHue = (type==="DRONE") ? 200 : (type==="HELI" ? 120 : 12);
+    const hueJitter = rand(-25, 25);
+
+    const span = W * 0.35;
+
+    S.enemies.push({
+      type,
+      x: W*0.5 + rand(-span, span),
+      y: -90*S.dpr,
+      r: (type==="FIGHTER"? 22 : type==="HELI"? 24 : 18)*S.dpr,
+      hp,
+      maxHp: hp,
+      shootCd: rand(0.55,1.25),
+      shootEvery: (type==="FIGHTER"? rand(1.15,1.55) : rand(1.25,1.85)),
+      alive:true,
+      wob: Math.random()*Math.PI*2,
+      baseHue,
+      hueJitter
+    });
+  }
+
+  function enemyShoot(e){
+    const kind = (e.type==="FIGHTER") ? "子彈" : (e.type==="HELI" ? "斜射火箭" : "無人機彈");
+
+    const baseVy = (e.type==="HELI" ? 470 : 420) * S.dpr;
+    const spread =
+      (e.type==="DRONE")   ? rand(-1.10, 1.10) :
+      (e.type==="HELI")    ? rand(-0.95, 0.95) :
+                             rand(-0.80, 0.80);
+
+    const vx = spread * 340 * S.dpr;
+    const vy = baseVy + rand(-140, 80) * S.dpr;
+
+    const straightChance = 0.04;
+    const extraChance =
+      (e.type==="DRONE") ? 0.10 :
+      (e.type==="HELI")  ? 0.14 :
+                           0.18;
+
+    S.eBullets.push({
+      x: e.x,
+      y: e.y + e.r,
+      vx,
+      vy: Math.max(vy, 140*S.dpr),
+      r: (kind.includes("火箭") ? 6.0 : 5.0) * S.dpr,
+      kind,
+      alive:true
+    });
+
+    if(Math.random() < extraChance){
+      const spread2 =
+        (e.type==="DRONE")   ? rand(-1.15, 1.15) :
+        (e.type==="HELI")    ? rand(-1.00, 1.00) :
+                               rand(-0.85, 0.85);
+
+      S.eBullets.push({
+        x: e.x,
+        y: e.y + e.r,
+        vx: spread2 * 320 * S.dpr,
+        vy: Math.max(baseVy + rand(-160, 60)*S.dpr, 140*S.dpr),
+        r: (kind.includes("火箭") ? 6.0 : 5.0) * S.dpr,
+        kind,
+        alive:true
+      });
+    }
+
+    if(Math.random() < straightChance){
+      S.eBullets.push({
+        x: e.x,
+        y: e.y + e.r,
+        vx: 0,
+        vy: baseVy * 1.02,
+        r: (kind.includes("火箭") ? 6.0 : 5.0) * S.dpr,
+        kind,
+        alive:true
+      });
+    }
+  }
+
+  function spawnFuel(){
+    const W=S.view.W;
+    const span = W * 0.35;
+    S.fuels.push({
+      x: W*0.5 + rand(-span, span),
+      y: -70*S.dpr,
+      r: 14*S.dpr,
+      alive:true,
+      bob:Math.random()*Math.PI*2
+    });
+  }
+
+  function spawnRepair(){
+    const W=S.view.W;
+    const span = W * 0.35;
+    S.repairs.push({
+      x: W*0.5 + rand(-span, span),
+      y: -70*S.dpr,
+      r: 15*S.dpr,
+      alive:true,
+      bob:Math.random()*Math.PI*2
+    });
+  }
+
+  // ===== Drawing helpers =====
+  function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
+
+  // Background only inside gameplay viewport
+  function drawBackground(dt){
+    const W=S.view.W, H=S.view.H;
+
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, "#bfe7ff");
+    g.addColorStop(1, "#6fb6ff");
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,W,H);
+
+    for(const c of S.clouds){
+      c.y += S.scroll*0.28*dt;
+      c.x += c.vx*dt;
+      if(c.y > H + 220*S.dpr){ c.y = -220*S.dpr; c.x = rand(-120*S.dpr, W+120*S.dpr); }
+      if(c.x < -220*S.dpr) c.x = W + 220*S.dpr;
+      if(c.x > W + 220*S.dpr) c.x = -220*S.dpr;
+
+      ctx.save();
+      ctx.globalAlpha = c.a;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, c.w*0.35, c.h*0.35, 0, 0, Math.PI*2);
+      ctx.ellipse(c.x+c.w*0.18, c.y+c.h*0.03, c.w*0.30, c.h*0.30, 0, 0, Math.PI*2);
+      ctx.ellipse(c.x-c.w*0.16, c.y+c.h*0.06, c.w*0.28, c.h*0.28, 0, 0, Math.PI*2);
+      ctx.ellipse(c.x, c.y+c.h*0.14, c.w*0.42, c.h*0.28, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawPlane(){
+    const d=S.dpr;
+    const roll = (input.joyX*0.14) + ((input.right?0.10:0)+(input.left?-0.10:0));
+    ctx.save();
+    ctx.translate(S.p.x,S.p.y);
+    ctx.rotate(roll);
+
+    ctx.save();
+    ctx.globalAlpha=0.18;
+    ctx.fillStyle="#000";
+    ctx.beginPath(); ctx.ellipse(0,10*d,46*d,18*d,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle="#ffffff";
+    rr(-10*d,-46*d,20*d,92*d,6*d); ctx.fill();
+
+    ctx.fillStyle="#f2f2f2";
+    ctx.strokeStyle="#111";
+    ctx.lineWidth=2*d;
+    ctx.beginPath(); ctx.roundRect(-16*d,-34*d,32*d,68*d,12*d);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle="#1a1a1a";
+    ctx.beginPath();
+    ctx.moveTo(0,-58*d); ctx.lineTo(-10*d,-34*d); ctx.lineTo(10*d,-34*d);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle="#e8e8e8";
+    ctx.beginPath();
+    ctx.moveTo(0,40*d); ctx.lineTo(-8*d,56*d); ctx.lineTo(8*d,56*d);
+    ctx.closePath(); ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle="#2a2a2a";
+    ctx.strokeStyle="#fff";
+    ctx.lineWidth=1.5*d;
+    ctx.beginPath(); ctx.ellipse(0,-18*d,10*d,7*d,0,0,Math.PI*2);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle="#111";
+    ctx.font=`${12*d}px system-ui`;
+    ctx.textAlign="center"; ctx.textBaseline="bottom";
+    ctx.fillText("U-2",0,-62*d);
+
+    ctx.restore();
+  }
+
+  function drawEnemy(e){
+    const d=S.dpr;
+    ctx.save();
+    ctx.translate(e.x,e.y);
+
+    const hue = (e.baseHue ?? 0) + (e.hueJitter ?? 0);
+    const fill = `hsl(${hue} 80% 60%)`;
+    const stroke = `hsl(${hue} 55% 15%)`;
+
+    // HP bar
+    ctx.save();
+    ctx.fillStyle="rgba(0,0,0,0.28)";
+    ctx.fillRect(-26*d, -40*d, 52*d, 6*d);
+    ctx.fillStyle="#ff3b3b";
+    ctx.fillRect(-26*d, -40*d, 52*d*(e.hp/e.maxHp), 6*d);
+    ctx.restore();
+
+    ctx.strokeStyle = stroke;
+    ctx.fillStyle   = fill;
+    ctx.lineWidth = 2*d;
+
+    if(e.type==="DRONE"){
+      // Quad-copter look (more “drone-like”)
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-22*d, 0); ctx.lineTo( 22*d, 0);
+      ctx.moveTo(0, -18*d); ctx.lineTo(0,  18*d);
+      ctx.stroke();
+
+      const pods = [
+        [-22*d,  0],
+        [ 22*d,  0],
+        [  0, -18*d],
+        [  0,  18*d]
+      ];
+      for(const [px,py] of pods){
+        ctx.beginPath(); ctx.arc(px, py, 6*d, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = "#111";
+        ctx.lineWidth = 2*d;
+        ctx.beginPath(); ctx.arc(px, py, 11*d, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.beginPath(); ctx.roundRect(-10*d, -8*d, 20*d, 16*d, 6*d);
+      ctx.fill(); ctx.stroke();
+
+      ctx.save();
+      ctx.fillStyle="#111";
+      ctx.beginPath(); ctx.arc(0, -2*d, 2.8*d, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      // marker X (smaller)
+      ctx.save();
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 3*d;
+      ctx.beginPath(); ctx.moveTo(-9*d,-7*d); ctx.lineTo(9*d,7*d); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-9*d,7*d); ctx.lineTo(9*d,-7*d); ctx.stroke();
+      ctx.restore();
+    }
+
+    if(e.type==="FIGHTER"){
+      ctx.beginPath();
+      ctx.moveTo(0,26*d);
+      ctx.lineTo(-10*d,10*d);
+      ctx.lineTo(-10*d,-16*d);
+      ctx.lineTo(0,-26*d);
+      ctx.lineTo(10*d,-16*d);
+      ctx.lineTo(10*d,10*d);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+
+      ctx.beginPath(); ctx.moveTo(-10*d,-2*d); ctx.lineTo(-30*d,6*d); ctx.lineTo(-10*d,10*d); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(10*d,-2*d); ctx.lineTo(30*d,6*d); ctx.lineTo(10*d,10*d); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      ctx.save();
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 3*d;
+      ctx.beginPath(); ctx.moveTo(-10*d,-8*d); ctx.lineTo(0,-2*d); ctx.lineTo(10*d,-8*d); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-8*d,0*d); ctx.lineTo(0,6*d); ctx.lineTo(8*d,0*d); ctx.stroke();
+      ctx.restore();
+    }
+
+    if(e.type==="HELI"){
+      rr(-18*d,-10*d,36*d,20*d,10*d); ctx.fill(); ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(18*d,0); ctx.lineTo(36*d,-6*d); ctx.lineTo(36*d,6*d);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      ctx.beginPath(); ctx.moveTo(0,-10*d); ctx.lineTo(0,-24*d); ctx.stroke();
+
+      ctx.save();
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 3*d;
+      ctx.beginPath(); ctx.moveTo(-34*d,-24*d); ctx.lineTo(34*d,-24*d); ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.strokeStyle="#111";
+      ctx.lineWidth=3*d;
+      ctx.beginPath(); ctx.moveTo(-12*d,-8*d); ctx.lineTo(-2*d,8*d); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0*d,-8*d); ctx.lineTo(10*d,8*d); ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function drawPickups(){
+    for(const f of S.fuels){
+      ctx.save();
+      ctx.translate(f.x,f.y);
+      ctx.fillStyle="#69f0ae";
+      ctx.strokeStyle="#111";
+      ctx.lineWidth=2*S.dpr;
+      ctx.beginPath(); ctx.roundRect(-18*S.dpr,-12*S.dpr,36*S.dpr,24*S.dpr,7*S.dpr);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle="#111";
+      ctx.font=`${12*S.dpr}px system-ui`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText("FUEL",0,0);
+      ctx.restore();
+    }
+
+    for(const r of S.repairs){
+      ctx.save();
+      ctx.translate(r.x,r.y);
+      ctx.fillStyle="#ffd166";
+      ctx.strokeStyle="#111";
+      ctx.lineWidth=2*S.dpr;
+      ctx.beginPath(); ctx.roundRect(-18*S.dpr,-12*S.dpr,36*S.dpr,24*S.dpr,7*S.dpr);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle="#111";
+      ctx.font=`${12*S.dpr}px system-ui`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText("REPAIR",0,0);
+      ctx.restore();
+    }
+  }
+
+  function drawParticles(){
+    for(const p of S.particles){
+      const a = clamp(p.life/0.55, 0, 1);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.warm ? "#ff8c00" : "#ff3b3b";
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawBanner(){
+    if(S.banner.t<=0) return;
+    const d=S.dpr, W=S.view.W, H=S.view.H;
+    const alpha=clamp(S.banner.t/0.5,0,1);
+    ctx.save();
+    ctx.globalAlpha=0.92*clamp(alpha,0.35,1);
+    ctx.fillStyle="rgba(0,0,0,0.35)";
+    ctx.beginPath();
+    ctx.roundRect(W*0.5-240*d, H*0.42-34*d, 480*d, 68*d, 18*d);
+    ctx.fill();
+
+    const color = S.banner.kind==="good" ? "#69f0ae"
+                : S.banner.kind==="bad" ? "#ff3b3b"
+                : "#ffd166";
+
+    ctx.fillStyle=color;
+    ctx.font=`800 ${26*d}px system-ui`;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(S.banner.text, W*0.5, H*0.42);
+    ctx.restore();
+  }
+
+  // ===== Update =====
+  function update(dt){
+    if(!S.running) return;
+    if(S.blockedByRotate) return;
+    if(S.paused) return;
+
+    S.t += dt;
+    if(S.banner.t>0) S.banner.t -= dt;
+
+    // streak timer
+    if(S.streakT > 0){
+      S.streakT -= dt;
+      if(S.streakT <= 0){
+        S.streakT = 0;
+        S.streak = 0;
+      }
+    }
+
+    if(S.invert>0){ S.invert -= dt; if(S.invert<=0){ S.invert=0; toast("控制回復正常"); } }
+    if(S.slowTimer>0) S.slowTimer -= dt;
+    if(S.invul>0) S.invul -= dt;
+
+    invertTag.style.display = S.invert>0 ? "inline-flex":"none";
+    slowTag.style.display   = S.slowTimer>0 ? "inline-flex":"none";
+    invulTag.style.display  = S.invul>0 ? "inline-flex":"none";
+
+    // fuel drain
+    const drain = (S.practice?2.0:3.0) * dt;
+    S.p.fuel = clamp(S.p.fuel - drain, 0, S.p.maxFuel);
+
+    // movement
+    const controlMul = (S.slowTimer>0) ? 0.35 : 1.0;
+    const vx = 520*S.dpr*controlMul;
+    const vy = 520*S.dpr*controlMul;
+
+    let up=input.up, down=input.down;
+    if(S.invert>0) [up,down]=[down,up];
+
+    let mx = (input.right?1:0) - (input.left?1:0);
+    let my = (down?1:0) - (up?1:0);
+    mx += input.joyX;
+    my += input.joyY;
+    mx = clamp(mx, -1, 1);
+    my = clamp(my, -1, 1);
+
+    S.p.x += mx * vx * dt;
+    S.p.y += my * vy * dt;
+
+    const W=S.view.W, H=S.view.H;
+    S.p.y = clamp(S.p.y, 120*S.dpr, H-140*S.dpr);
+    S.p.x = clamp(S.p.x, 90*S.dpr,  W-90*S.dpr);
+
+    // distance
+    S.km += (S.scroll/(235*S.dpr))*dt;
+
+    // survival score: every full km +10 (no banner)
+    if(Math.floor(S.km) > Math.floor(S._prevKm)){
+      addScore(10); // 冇 label → 唔會彈 banner
+      S._prevKm = S.km;
+    }
+
+    // fire
+    if(S.p.fireCd>0) S.p.fireCd -= dt;
+    if(input.fire) fire();
+
+    // spawn
+    if(S.t % 1 < dt){
+      const enemyChance = S.practice ? 0.30 : 0.48;
+      if(Math.random()<enemyChance) spawnEnemy();
+      if(Math.random() < (S.practice?0.40:0.28)) spawnFuel();
+      if(Math.random() < (S.practice?0.26:0.18)) spawnRepair();
+    }
+
+    // enemies
+    for(const e of S.enemies){
+      if(!e.alive) continue;
+      e.wob += dt*2.2;
+      e.y += S.scroll*dt;
+      e.x += Math.sin(e.wob) * (e.type==="DRONE"?18:10) * S.dpr * dt;
+
+      e.shootCd -= dt;
+      if(e.shootCd<=0){
+        enemyShoot(e);
+        e.shootCd = e.shootEvery * rand(0.85,1.25);
+      }
+      if(e.y > H + 220*S.dpr) e.alive=false;
+    }
+
+    // pickups
+    for(const f of S.fuels){
+      if(!f.alive) continue;
+      f.bob += dt*3;
+      f.y += S.scroll*dt;
+      f.x += Math.sin(f.bob)*18*S.dpr*dt;
+      if(f.y > H + 220*S.dpr) f.alive=false;
+    }
+    for(const r of S.repairs){
+      if(!r.alive) continue;
+      r.bob += dt*3;
+      r.y += S.scroll*dt;
+      r.x += Math.cos(r.bob)*16*S.dpr*dt;
+      if(r.y > H + 220*S.dpr) r.alive=false;
+    }
+
+    // bullets
+    for(const b of S.pBullets) b.y += b.vy*dt;
+    for(const b of S.eBullets){
+      if(!b.alive) continue;
+      b.x += b.vx*dt;
+      b.y += b.vy*dt;
+      if(b.y > H + 260*S.dpr) b.alive=false;
+    }
+
+    // enemy bullets hit player
+    for(const b of S.eBullets){
+      if(!b.alive) continue;
+      if(circleHit(b.x,b.y,b.r, S.p.x,S.p.y,S.p.r)){
+        b.alive=false;
+        doBulletHit(b.x,b.y);
+        break;
+      }
+    }
+
+    // collide with enemies
+    for(const e of S.enemies){
+      if(!e.alive) continue;
+      if(circleHit(e.x,e.y,e.r, S.p.x,S.p.y,S.p.r)){
+        e.alive=false;
+        doCollision((e.x+S.p.x)*0.5, (e.y+S.p.y)*0.5);
+        break;
+      }
+    }
+
+    // pickups -> quiz
+    for(const f of S.fuels){
+      if(!f.alive) continue;
+      if(circleHit(f.x,f.y,f.r, S.p.x,S.p.y,S.p.r)){
+        f.alive=false;
+        openQuiz("燃料補給站", (ok)=>{
+          const delta=S.p.maxFuel/6;
+          if(ok){
+            S.p.fuel = clamp(S.p.fuel+delta,0,S.p.maxFuel);
+            showBanner("燃料 +1/6", "good", 1.2);
+          }else{
+            S.p.fuel = clamp(S.p.fuel-delta,0,S.p.maxFuel);
+            showBanner("燃料 -1/6", "bad", 1.2);
+          }
+        });
+        break;
+      }
+    }
+    for(const r of S.repairs){
+      if(!r.alive) continue;
+      if(circleHit(r.x,r.y,r.r, S.p.x,S.p.y,S.p.r)){
+        r.alive=false;
+        openQuiz("維修站 / 機身修復", (ok)=>{
+          const delta=S.p.maxHull/6;
+          if(ok){
+            S.p.hull = clamp(S.p.hull+delta,0,S.p.maxHull);
+            showBanner("維修 +1/6", "good", 1.2);
+          }else{
+            S.p.hull = clamp(S.p.hull-delta,0,S.p.maxHull);
+            showBanner("維修 -1/6", "bad", 1.2);
+            if(S.p.hull<=0) end(false);
+          }
+        });
+        break;
+      }
+    }
+
+    // player bullets hit enemies (scoring on kill)
+    for(const pb of S.pBullets){
+      for(const e of S.enemies){
+        if(!e.alive) continue;
+        if(circleHit(pb.x,pb.y,pb.r, e.x,e.y,e.r)){
+          e.hp -= 1;
+          pb.y = -99999;
+          spawnExplosion(e.x,e.y, 0.30, true);
+
+          if(e.hp<=0){
+            e.alive=false;
+            spawnExplosion(e.x,e.y, 1.05, false);
+
+            // ===== Kill score + streak =====
+            const base =
+              e.type==="DRONE" ? 60 :
+              e.type==="HELI" ? 110 :
+              170;
+
+            if(S.streakT > 0) S.streak++;
+            else S.streak = 1;
+            S.streakT = 3.0;
+
+            const mul = Math.min(2.0, 1 + (S.streak-1)*0.10);
+            addScore(base * mul, "擊落");
+          }
+          break;
+        }
+      }
+    }
+
+    // cleanup
+    if(S.t % 0.5 < dt){
+      S.enemies = S.enemies.filter(e=>e.alive);
+      S.eBullets = S.eBullets.filter(b=>b.alive);
+      S.pBullets = S.pBullets.filter(b=>b.y > -320*S.dpr);
+      S.fuels = S.fuels.filter(f=>f.alive);
+      S.repairs = S.repairs.filter(r=>r.alive);
+    }
+
+    updateParticles(dt);
+
+    // end conditions
+    if(S.p.fuel<=0 && S.t>12) end(false);
+    if(S.p.hull<=0) end(false);
+    if(S.p.col<=0) end(false);
+    if(S.km >= S.goalKm) end(true);
+
+    updateHUD();
+  }
+
+  // ===== Draw =====
+  function draw(dt){
+    ctx.fillStyle = "#88c9ff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Letterbox side masks
+    if (S.view.ox > 0) {
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      ctx.fillRect(0, 0, S.view.ox, canvas.height);
+      ctx.fillRect(S.view.ox + S.view.W, 0, canvas.width - (S.view.ox + S.view.W), canvas.height);
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.translate(S.view.ox, S.view.oy);
+
+    drawBackground(dt);
+
+    for(const b of S.eBullets){
+      ctx.fillStyle = b.kind.includes("火箭") ? "#ff8c00" : "#ff3b3b";
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+    }
+
+    for(const b of S.pBullets){
+      ctx.fillStyle="#111";
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+    }
+
+    drawPickups();
+    for(const e of S.enemies) drawEnemy(e);
+    drawPlane();
+    drawParticles();
+    drawBanner();
+
+    if(S.running && !S.paused && !S.blockedByRotate){
+      const W=S.view.W;
+      const remain=Math.max(0,S.goalKm-S.km);
+      ctx.fillStyle="rgba(0,0,0,0.65)";
+      ctx.font=`${14*S.dpr}px system-ui`;
+      ctx.textAlign="center"; ctx.textBaseline="top";
+      ctx.fillText(`距離終點：約 ${Math.ceil(remain)} km`, W*0.5, 64*S.dpr);
+    }
+
+    ctx.restore();
+  }
+
+  function loop(now){
+    const dt = Math.min(0.033, (now - S.last)/1000);
+    S.last = now;
+
+    updateOrientationGate();
+
+    if(document.hidden){
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    if(S.running){ update(dt); draw(dt); }
+    else { draw(dt); }
+
+    requestAnimationFrame(loop);
+  }
+
+  // ===== Boot =====
+  resize();
+  updateOrientationGate();
+  initBackground();
+  reset();
+
+  toast(
+    isMobile
+      ? "已加入計分：擊落＋答題＋里程（混合模式）。答題後 0.25 秒可點任何位置繼續。手機直向遊戲視窗已啟用。"
+      : "已加入計分：擊落＋答題＋里程（混合模式）。答題後 0.25 秒可點任何位置繼續。",
+    2600
+  );
+
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
