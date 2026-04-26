@@ -3959,23 +3959,43 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
       const W=S.view.W, H=S.view.H;
       const remain=Math.max(0,S.goalKm-S.km);
       const isNarrow = (innerWidth <= 680);
-      const label = `距離終點：約 ${Math.ceil(remain)} km`;
       ctx.save();
-      ctx.font=`700 ${isNarrow ? 11.5*S.dpr : 14*S.dpr}px system-ui`;
-      ctx.textAlign="center"; ctx.textBaseline="middle";
-      const tw = ctx.measureText(label).width;
 
       if(isNarrow){
-        // 手機版：正下方中央，位於搖桿與射擊掣之間上方，避開上方 HUD
-        const boxY = H - 112*S.dpr;
+        // 最終版：手機版改為畫面左中直排，避開上方 HUD、下方搖桿及右下射擊掣
+        const x = 18*S.dpr;
+        const y = H*0.47;
+        const boxW = 42*S.dpr;
+        const boxH = 126*S.dpr;
+
         ctx.fillStyle="rgba(0,0,0,0.50)";
         ctx.beginPath();
-        ctx.roundRect(W*0.5 - tw/2 - 10*S.dpr, boxY - 12*S.dpr, tw + 20*S.dpr, 24*S.dpr, 12*S.dpr);
+        ctx.roundRect(x, y - boxH/2, boxW, boxH, 15*S.dpr);
         ctx.fill();
+
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+
+        ctx.font=`800 ${11*S.dpr}px system-ui`;
         ctx.fillStyle="rgba(255,255,255,0.95)";
-        ctx.fillText(label, W*0.5, boxY);
+        ctx.fillText("距", x + boxW/2, y - 46*S.dpr);
+        ctx.fillText("離", x + boxW/2, y - 30*S.dpr);
+        ctx.fillText("終", x + boxW/2, y - 14*S.dpr);
+        ctx.fillText("點", x + boxW/2, y + 2*S.dpr);
+
+        ctx.font=`900 ${15*S.dpr}px system-ui`;
+        ctx.fillStyle="#ffe066";
+        ctx.fillText(`${Math.ceil(remain)}`, x + boxW/2, y + 27*S.dpr);
+
+        ctx.font=`800 ${10*S.dpr}px system-ui`;
+        ctx.fillStyle="rgba(255,255,255,0.92)";
+        ctx.fillText("km", x + boxW/2, y + 48*S.dpr);
       }else{
         const boxY = 64*S.dpr;
+        const label = `距離終點：約 ${Math.ceil(remain)} km`;
+        ctx.font=`700 ${14*S.dpr}px system-ui`;
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        const tw = ctx.measureText(label).width;
         ctx.fillStyle="rgba(0,0,0,0.52)";
         ctx.beginPath();
         ctx.roundRect(W*0.5 - tw/2 - 10*S.dpr, boxY - 12*S.dpr, tw + 20*S.dpr, 24*S.dpr, 12*S.dpr);
@@ -4015,8 +4035,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
   toast(
     isMobile
-      ? "4.3：手機版距離移至正下方；中彈減速改為小警告彈出。"
-      : "4.3：手機版距離移至正下方；中彈減速改為小警告彈出。",
+      ? "Final：手機版距離終點改為左中直排；保留中彈減速小警告彈出。"
+      : "Final：手機版距離終點改為左中直排；保留中彈減速小警告彈出。",
     2600
   );
 
