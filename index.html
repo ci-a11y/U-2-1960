@@ -662,6 +662,20 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
   cursor:default;
 }
 
+  
+/* ===== 4.0 Final Fix：iPhone距離字眼 + 中彈減速提示 ===== */
+#damageSlowTag{
+  background:rgba(255,80,80,.22) !important;
+  border-color:rgba(255,80,80,.45) !important;
+  color:#fff !important;
+}
+@media (max-width: 680px){
+  #damageSlowTag{
+    font-size:10.5px !important;
+    padding:5px 8px !important;
+  }
+}
+
   </style>
 </head>
 
@@ -681,6 +695,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
           <span class="tag" id="invertTag" style="display:none;">上下反轉中</span>
           <span class="tag" id="invulTag" style="display:none;">短暫無敵</span>
           <span class="tag" id="periodTag" style="display:none;">題庫：—</span>
+          <span class="tag" id="damageSlowTag" style="display:none;">中彈受損｜戰機減速</span>
         </div>
         <small>中彈扣機身｜燃料補給／損耗維修需完成任務檢核｜撞擊扣損耗</small>
       </div>
@@ -827,6 +842,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
   const invertTag = document.getElementById('invertTag');
   const invulTag = document.getElementById('invulTag');
   const periodTag = document.getElementById('periodTag');
+  const damageSlowTag = document.getElementById('damageSlowTag');
 
   // Overlays
   const overlay = document.getElementById('screenOverlay');
@@ -3051,7 +3067,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     const delta = S.p.maxHull/6;
     S.p.hull = clamp(S.p.hull - delta, 0, S.p.maxHull);
     spawnExplosion(x,y, 0.9, true);
-    showBanner("中彈：機身 -1/6", "bad", 1.2);
+    showBanner("中彈受損｜戰機減速", "bad", 1.4);
     applyControlSlow(5);
 
     // small penalty (mixed mode)
@@ -3612,6 +3628,15 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
     invertTag.style.display = S.invert>0 ? "inline-flex":"none";
     slowTag.style.display   = S.slowTimer>0 ? "inline-flex":"none";
+    if(S.slowTimer>0){
+      slowTag.textContent = `操控減速中 ${Math.ceil(S.slowTimer)}s`;
+    }else{
+      slowTag.textContent = "操控減速中";
+    }
+    if(damageSlowTag){
+      damageSlowTag.style.display = S.slowTimer>0 ? "inline-flex":"none";
+      damageSlowTag.textContent = S.slowTimer>0 ? `中彈受損｜戰機減速 ${Math.ceil(S.slowTimer)}s` : "中彈受損｜戰機減速";
+    }
     invulTag.style.display  = S.invul>0 ? "inline-flex":"none";
 
     // fuel drain
@@ -3905,12 +3930,22 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     drawAirspaceWarning();
 
     if(S.running && !S.paused && !S.blockedByRotate){
-      const W=S.view.W;
+      const W=S.view.W, H=S.view.H;
       const remain=Math.max(0,S.goalKm-S.km);
-      ctx.fillStyle="rgba(0,0,0,0.65)";
-      ctx.font=`${14*S.dpr}px system-ui`;
-      ctx.textAlign="center"; ctx.textBaseline="top";
-      ctx.fillText(`距離終點：約 ${Math.ceil(remain)} km`, W*0.5, 64*S.dpr);
+      const isNarrow = (innerWidth <= 680);
+      const boxY = isNarrow ? 100*S.dpr : 64*S.dpr; // iPhone 避開上方 HUD
+      const label = `距離終點：約 ${Math.ceil(remain)} km`;
+      ctx.save();
+      ctx.font=`700 ${isNarrow ? 12*S.dpr : 14*S.dpr}px system-ui`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      const tw = ctx.measureText(label).width;
+      ctx.fillStyle="rgba(0,0,0,0.52)";
+      ctx.beginPath();
+      ctx.roundRect(W*0.5 - tw/2 - 10*S.dpr, boxY - 12*S.dpr, tw + 20*S.dpr, 24*S.dpr, 12*S.dpr);
+      ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,0.95)";
+      ctx.fillText(label, W*0.5, boxY);
+      ctx.restore();
     }
 
     ctx.restore();
@@ -3941,8 +3976,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
   toast(
     isMobile
-      ? "3.9：難度平衡修正；米格出現後會減少其他武器密度，並略增加補給機會。"
-      : "3.9：難度平衡修正；米格出現後會減少其他武器密度，並略增加補給機會。",
+      ? "4.0：修正 iPhone 距離顯示位置，並加入中彈減速倒計時提示。"
+      : "4.0：修正 iPhone 距離顯示位置，並加入中彈減速倒計時提示。",
     2600
   );
 
