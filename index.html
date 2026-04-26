@@ -243,83 +243,336 @@ canvas{ width:100%; height:100%; display:block; background:#88c9ff; }
 /* 3.0 warning pulse helper */
 @keyframes redPulse3{ 0%,100%{opacity:.35} 50%{opacity:1} }
   
-/* ===== 3.4 Mobile Fix：細手機可按開始、可捲動畫面 ===== */
+/* ===== 3.5 Responsive Fit：手機／iPad／電腦不靠捲動，自動適應螢幕 ===== */
+html, body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+
 #screenOverlay{
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  align-items:flex-start;
-  padding: calc(10px + env(safe-area-inset-top)) 0 calc(130px + env(safe-area-inset-bottom));
+  overflow:hidden !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important;
   box-sizing:border-box;
 }
+
 #screenOverlay .panel{
-  margin: 0 auto;
+  margin:0 auto !important;
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 14px);
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
+
 #modal{
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  padding: calc(10px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom));
+  overflow:hidden !important;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important;
   box-sizing:border-box;
 }
-@media (max-width: 520px){
+
+#modal .card{
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 14px);
+  display:flex;
+  flex-direction:column;
+}
+
+#modal .cardBody{
+  overflow:hidden;
+}
+
+@media (max-width: 680px){
   .panel{
-    width:min(94vw, 860px);
-    padding:14px 12px 14px;
-    border-radius:20px;
+    width: min(94vw, 860px) !important;
+    padding: 12px 12px 10px !important;
+    border-radius: 18px !important;
   }
-  .panel h1{ font-size:18px; }
-  .panel p{ font-size:12.5px; line-height:1.45; }
-  .kbox{ font-size:12px; padding:10px; line-height:1.42; }
-  .ctaRow{ justify-content:center; gap:8px; }
+  .panel h1{
+    font-size: clamp(16px, 4.8vw, 20px) !important;
+    line-height:1.18 !important;
+  }
+  .panel p{
+    font-size: clamp(11px, 3.1vw, 13px) !important;
+    line-height:1.36 !important;
+    margin:6px 0 0 !important;
+  }
+  .grid2{
+    grid-template-columns:1fr 1fr !important;
+    gap:7px !important;
+    margin-top:8px !important;
+  }
+  .kbox{
+    font-size: clamp(10px, 2.75vw, 12px) !important;
+    line-height:1.32 !important;
+    padding:8px !important;
+    border-radius:14px !important;
+  }
+  .ctaRow{
+    display:grid !important;
+    grid-template-columns: 1fr !important;
+    gap:7px !important;
+    margin-top:9px !important;
+  }
   .cta{
-    padding:11px 12px;
-    font-size:13px;
-    min-width: 88%;
+    width:100% !important;
+    min-width:0 !important;
+    padding:9px 10px !important;
+    font-size: clamp(12px, 3.2vw, 13px) !important;
+    line-height:1.15 !important;
+  }
+  .tiny{
+    display:none !important;
   }
   .card{
-    width:min(94vw, 760px);
-    border-radius:18px;
+    width:min(94vw,760px) !important;
+    border-radius:17px !important;
   }
   .cardHead{
-    padding:12px 12px 8px;
-    flex-direction:column;
-    gap:8px;
+    padding:10px 12px 6px !important;
+    gap:6px !important;
   }
-  .qTitle{ font-size:16px; }
-  .qSub{ font-size:12px; }
-  .cardBody{ padding:10px 12px 14px; }
-  .optBtn{ font-size:13.5px; padding:10px; }
+  .tag{
+    font-size:10.5px !important;
+    padding:5px 8px !important;
+  }
+  .qTitle{
+    font-size: clamp(14px, 4vw, 16px) !important;
+    line-height:1.26 !important;
+  }
+  .qSub{
+    font-size: clamp(10.5px, 3vw, 12px) !important;
+    margin-top:4px !important;
+  }
+  .cardBody{
+    padding:8px 10px 10px !important;
+  }
+  .options{
+    gap:7px !important;
+    margin-top:8px !important;
+  }
+  .optBtn{
+    font-size: clamp(12px, 3.4vw, 13.5px) !important;
+    padding:8px 9px !important;
+    border-radius:13px !important;
+    line-height:1.25 !important;
+  }
+  .feedback{
+    margin-top:7px !important;
+    font-size:12px !important;
+    padding:7px 9px !important;
+  }
+  .hintBox{
+    margin-top:6px !important;
+    font-size:11.5px !important;
+    line-height:1.32 !important;
+  }
   #joystick{
-    width:118px;
-    height:118px;
-    left: calc(12px + env(safe-area-inset-left));
-    bottom: calc(12px + env(safe-area-inset-bottom));
+    width:112px !important;
+    height:112px !important;
+    left: calc(10px + env(safe-area-inset-left)) !important;
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
   }
   #stick{
-    width:48px;
-    height:48px;
-    margin-left:-24px;
-    margin-top:-24px;
+    width:46px !important;
+    height:46px !important;
+    margin-left:-23px !important;
+    margin-top:-23px !important;
   }
   .vbtn.big{
-    width:74px;
-    height:74px;
-    border-radius:22px;
+    width:72px !important;
+    height:72px !important;
+    border-radius:20px !important;
   }
   .pad.right{
-    right: calc(30px + env(safe-area-inset-right));
-    bottom: calc(32px + env(safe-area-inset-bottom));
+    right: calc(26px + env(safe-area-inset-right)) !important;
+    bottom: calc(28px + env(safe-area-inset-bottom)) !important;
   }
-  .bars{ min-width: 150px; gap:6px; }
-  .badge.right{ max-width: 45vw; padding:8px; }
-  .barRow small{ font-size:10.5px; }
+  .hudRow{
+    gap:6px !important;
+  }
+  #hud .badge:not(.right){
+    padding:7px 8px !important;
+    max-width:52vw !important;
+  }
+  #hud .badge:not(.right) b{
+    font-size:12px !important;
+  }
+  .badge.right{
+    max-width:42vw !important;
+    padding:7px !important;
+  }
+  .bars{
+    min-width:132px !important;
+    gap:5px !important;
+  }
+  .barRow{
+    gap:4px !important;
+  }
+  .barRow small, #dist{
+    font-size:10px !important;
+  }
 }
-@media (max-height: 700px){
-  #screenOverlay{
-    justify-content:flex-start;
+
+@media (max-height: 740px) and (max-width: 680px){
+  .panel{
+    padding:10px 10px 8px !important;
   }
-  .grid2{ gap:8px; margin-top:8px; }
-  .panel p{ margin-top:6px; }
-  .ctaRow{ margin-top:10px; }
+  .panel h1{
+    font-size:15.5px !important;
+  }
+  .panel p{
+    font-size:11px !important;
+    line-height:1.28 !important;
+    max-height:58px;
+    overflow:hidden;
+  }
+  .kbox{
+    font-size:10.2px !important;
+    line-height:1.22 !important;
+    padding:6px !important;
+  }
+  .grid2{
+    gap:6px !important;
+    margin-top:6px !important;
+  }
+  .ctaRow{
+    gap:6px !important;
+    margin-top:7px !important;
+  }
+  .cta{
+    padding:8px 9px !important;
+  }
+}
+
+@media (max-height: 640px) and (max-width: 680px){
+  .panel p{
+    display:none !important;
+  }
+  .grid2 .kbox{
+    max-height:72px;
+    overflow:hidden;
+  }
+  .panel h1{
+    font-size:14.5px !important;
+  }
+  .cta{
+    padding:7px 8px !important;
+    font-size:12px !important;
+  }
+}
+
+@media (min-width: 681px){
+  #screenOverlay .panel{
+    max-height: calc(100dvh - 28px);
+  }
+}
+
+  
+/* ===== 3.6 Cover Clarity：封面說明與模式選擇更清楚 ===== */
+.coverPanel{
+  gap:0;
+}
+.coverEyebrow{
+  display:inline-flex;
+  align-self:flex-start;
+  border-radius:999px;
+  padding:6px 10px;
+  margin-bottom:8px;
+  font-size:12px;
+  color:rgba(255,255,255,.92);
+  background:rgba(105,240,174,.14);
+  border:1px solid rgba(105,240,174,.28);
+}
+.coverLead{
+  margin-top:6px !important;
+}
+.modeNotice{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  background:rgba(255,209,102,.14);
+  border:1px solid rgba(255,209,102,.32);
+  color:rgba(255,255,255,.95);
+  font-size:13.5px;
+  line-height:1.45;
+}
+.coverGrid{
+  grid-template-columns:1fr 1fr !important;
+}
+.controlHint{
+  margin-top:10px;
+  padding:8px 10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.86);
+  font-size:12.5px;
+  line-height:1.35;
+}
+@media (max-width: 680px){
+  .coverEyebrow{
+    font-size:10.5px !important;
+    padding:5px 8px !important;
+    margin-bottom:6px !important;
+  }
+  .coverPanel .coverLead{
+    font-size:11.4px !important;
+    line-height:1.32 !important;
+  }
+  .modeNotice{
+    margin-top:7px !important;
+    padding:7px 8px !important;
+    border-radius:13px !important;
+    font-size:11px !important;
+    line-height:1.3 !important;
+  }
+  .coverGrid{
+    grid-template-columns:1fr 1fr !important;
+    gap:6px !important;
+  }
+  .coverGrid .kbox{
+    font-size:9.8px !important;
+    line-height:1.22 !important;
+    padding:6px !important;
+  }
+  .controlHint{
+    margin-top:7px !important;
+    padding:6px 8px !important;
+    font-size:10.2px !important;
+    line-height:1.25 !important;
+  }
+}
+@media (max-height: 740px) and (max-width: 680px){
+  .coverPanel .coverLead{
+    max-height:44px !important;
+    overflow:hidden !important;
+  }
+  .modeNotice{
+    max-height:48px;
+    overflow:hidden;
+  }
+  .coverGrid .kbox{
+    max-height:62px;
+    overflow:hidden;
+  }
+  .controlHint{
+    display:none !important;
+  }
+}
+@media (max-height: 640px) and (max-width: 680px){
+  .coverEyebrow{
+    display:none !important;
+  }
+  .coverGrid .kbox:nth-child(1),
+  .coverGrid .kbox:nth-child(2){
+    display:none !important;
+  }
+  .modeNotice{
+    font-size:10.5px !important;
+    padding:6px !important;
+  }
 }
 
   </style>
@@ -418,37 +671,47 @@ canvas{ width:100%; height:100%; display:block; background:#88c9ff; }
 
 <!-- Start / End overlay -->
 <div id="screenOverlay">
-  <div class="panel">
-    <h1>《1960年 U-2 高空偵察任務》直向突破（3.0教學版）</h1>
-    <p>
-      前方＝上。你要操控 U-2 直向突破防空網。<br/>
-      <b>中彈</b>：機身耐久 -1/6 + 小爆炸 + 操控減速 5 秒（唔答題）<br/>
-      <b>燃料補給／損耗維修</b>：取得補給後會抽冷戰 MC；答啱可補燃料／維修，答錯會扣相應狀態<br/>
-      <b>撞擊冷戰威脅</b>：撞擊損耗 -1/3 + 小爆炸（可致命）
+  <div class="panel coverPanel">
+    <div class="coverEyebrow">冷戰知識溫習遊戲｜U-2 高空偵察任務</div>
+    <h1>《U-2 偵察機突破任務》</h1>
+    <p class="coverLead">
+      你將操控 <b>U-2 偵察機</b> 穿越冷戰防空網。遊戲目的是在完成飛行任務的同時，重溫冷戰的重要史實、時序、因果和概念。
     </p>
 
-    <div class="grid2">
+    <div class="modeNotice">
+      <b>請先選擇遊戲模式，任務才會開始。</b><br/>
+      建議一般課堂先用「簡易版」，考前或挑戰可用「困難版」。
+    </div>
+
+    <div class="grid2 coverGrid">
       <div class="kbox">
-        <b>手機操作</b><br/>
-        左下：拖動搖桿（上下左右）<br/>
-        右下：● 射擊<br/><br/>
-        <b>電腦操作（保留）</b><br/>
-        方向鍵：移動｜Space：射擊
+        <b>遊戲目的</b><br/>
+        透過飛行、補給與任務檢核，溫習冷戰知識。完成後會顯示任務報告。
       </div>
       <div class="kbox">
-        <b>威脅耐力</b><br/>
-        雷達偵測：2下｜防空火力：3下｜米格攔截機：4下<br/><br/>
-        <b>威脅外觀</b><br/>
-        雷達偵測：掃描器｜防空火力：炮台｜米格攔截機：攔截機剪影
+        <b>出題說明</b><br/>
+        取得燃料補給或損耗維修後會出現 MC 題。答啱可獲補給效果。
       </div>
+      <div class="kbox">
+        <b>簡易版</b><br/>
+        隨機抽 1 個時段出題，例如早期冷戰、緩和時期或冷戰後期。
+      </div>
+      <div class="kbox">
+        <b>困難版</b><br/>
+        全時段混合出題，涵蓋 1946 至 1991 年冷戰發展。
+      </div>
+    </div>
+
+    <div class="controlHint">
+      手機／iPad：左下搖桿移動，右下按鈕射擊｜電腦：方向鍵移動，Space 射擊
     </div>
 
     <div class="ctaRow">
-      <button class="cta" id="easyBtn">簡易版：隨機抽 1 個時段</button>
-      <button class="cta secondary" id="startBtn">困難版：全時段混合</button>
-      <button class="cta secondary" id="practiceBtn">只練題（安全模式）</button>
+      <button class="cta" id="easyBtn">開始簡易版｜隨機抽 1 個時段</button>
+      <button class="cta secondary" id="startBtn">開始困難版｜全時段混合</button>
+      <button class="cta secondary" id="practiceBtn">只練題｜安全模式</button>
     </div>
-    <div class="tiny">Canvas｜Vanilla JS｜單檔｜手機+電腦可玩｜直屏玩法</div>
+    <div class="tiny">請選擇以上其中一個模式開始遊戲。</div>
   </div>
 </div>
 
@@ -3456,8 +3719,8 @@ canvas{ width:100%; height:100%; display:block; background:#88c9ff; }
 
   toast(
     isMobile
-      ? "3.4：手機修正版；開始畫面可捲動，細手機亦可按開始。"
-      : "3.4：手機修正版；開始畫面可捲動，細手機亦可按開始。",
+      ? "3.6：封面已清楚顯示遊戲目的、出題說明及簡易／困難模式。"
+      : "3.6：封面已清楚顯示遊戲目的、出題說明及簡易／困難模式。",
     2600
   );
 
