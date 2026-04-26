@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover" />
   <title>U-2 Cold War 教學遊戲 3.0</title>
 
   <style>
@@ -647,6 +647,21 @@ button, .cta, .vbtn, #controls, #controls *, canvas{
   }
 }
 
+  
+/* ===== 3.8 iOS hard zoom fix ===== */
+*{
+  -webkit-touch-callout:none !important;
+  -webkit-user-select:none !important;
+  user-select:none !important;
+}
+html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
+  touch-action:none !important;
+  -webkit-user-drag:none !important;
+}
+.vbtn, .vbtn *{
+  cursor:default;
+}
+
   </style>
 </head>
 
@@ -856,24 +871,39 @@ button, .cta, .vbtn, #controls, #controls *, canvas{
   canvas.style.touchAction = "none";
   joystick.style.touchAction = "none";
 
-  // 3.7: Stronger iOS/iPadOS double-tap zoom prevention for rapid fire button taps.
-  // Keep this global because Safari may zoom from double-tap even when the target is inside controls.
+  // 3.8: stronger iOS/iPadOS double-tap and pinch zoom prevention.
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  if(viewportMeta){
+    viewportMeta.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover');
+  }
+
   let lastTouchEnd = 0;
   document.addEventListener("touchend", (e) => {
     const now = Date.now();
-    if (now - lastTouchEnd <= 320) {
+    if (now - lastTouchEnd <= 450) {
       e.preventDefault();
+      e.stopPropagation();
     }
     lastTouchEnd = now;
-  }, { passive:false });
+  }, { passive:false, capture:true });
 
   document.addEventListener("dblclick", (e) => {
     e.preventDefault();
-  }, { passive:false });
+    e.stopPropagation();
+  }, { passive:false, capture:true });
 
   document.addEventListener("gesturestart", (e) => {
     e.preventDefault();
-  }, { passive:false });
+    e.stopPropagation();
+  }, { passive:false, capture:true });
+  document.addEventListener("gesturechange", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive:false, capture:true });
+  document.addEventListener("gestureend", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive:false, capture:true });
 
   // Best-effort portrait lock (iOS may ignore)
   async function tryLockPortrait(){
@@ -1098,11 +1128,99 @@ button, .cta, .vbtn, #controls, #controls *, canvas{
     btn.addEventListener('lostpointercapture', up, {passive:false});
   });
 
+  // 3.8 iOS/iPadOS hard fix:
+  // Safari may still zoom on rapid double-tap. Directly intercept touch events on the fire button.
+  const fireTouchBtn = document.querySelector('[data-btn="fire"]');
+  if(fireTouchBtn){
+    fireTouchBtn.addEventListener('touchstart', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      setBtn('fire', true);
+    }, {passive:false});
+    fireTouchBtn.addEventListener('touchend', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      setBtn('fire', false);
+    }, {passive:false});
+    fireTouchBtn.addEventListener('touchcancel', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      setBtn('fire', false);
+    }, {passive:false});
+  }
+
+  // Prevent double-tap zoom on canvas/control surfaces without blocking modal buttons.
+  [canvas, document.getElementById('controls')].forEach(el=>{
+    if(!el) return;
+    ['touchstart','touchmove','touchend','touchcancel'].forEach(type=>{
+      el.addEventListener(type, (e)=>{
+        if(e.target.closest && e.target.closest('#modal, #screenOverlay')) return;
+        e.preventDefault();
+      }, {passive:false});
+    });
+  });
+
   // Virtual joystick (rect center + pointerId safe for multi-touch)
   let joyActive = false;
   let joyCenter = {x:0, y:0};
   let joyPointerId = null;
   const joyRadius = 60;
+
+  // Touch fallback for iOS Safari; prevents browser zoom/scroll while keeping joystick responsive.
+  function updateJoyFromClient(clientX, clientY){
+    let dx = clientX - joyCenter.x;
+    let dy = clientY - joyCenter.y;
+    const dist = Math.hypot(dx,dy);
+    if(dist > joyRadius){
+      dx = dx/dist * joyRadius;
+      dy = dy/dist * joyRadius;
+    }
+    stick.style.transform = `translate(${dx}px, ${dy}px)`;
+    input.joyX = dx / joyRadius;
+    input.joyY = dy / joyRadius;
+  }
+
+  let joyTouchId = null;
+  joystick.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    const t = e.changedTouches[0];
+    joyTouchId = t.identifier;
+    joyActive = true;
+    const r = joystick.getBoundingClientRect();
+    joyCenter = { x: r.left + r.width/2, y: r.top + r.height/2 };
+    updateJoyFromClient(t.clientX, t.clientY);
+  }, {passive:false});
+
+  joystick.addEventListener('touchmove', e=>{
+    if(joyTouchId === null) return;
+    for(const t of e.changedTouches){
+      if(t.identifier === joyTouchId){
+        e.preventDefault();
+        e.stopPropagation();
+        updateJoyFromClient(t.clientX, t.clientY);
+        break;
+      }
+    }
+  }, {passive:false});
+
+  function endJoyTouch(e){
+    if(joyTouchId === null) return;
+    for(const t of e.changedTouches){
+      if(t.identifier === joyTouchId){
+        e.preventDefault();
+        e.stopPropagation();
+        joyTouchId = null;
+        joyActive = false;
+        stick.style.transform = `translate(0,0)`;
+        input.joyX = 0;
+        input.joyY = 0;
+        break;
+      }
+    }
+  }
+  joystick.addEventListener('touchend', endJoyTouch, {passive:false});
+  joystick.addEventListener('touchcancel', endJoyTouch, {passive:false});
 
   joystick.addEventListener('pointerdown', e=>{
     joyActive = true;
@@ -3811,8 +3929,8 @@ button, .cta, .vbtn, #controls, #controls *, canvas{
 
   toast(
     isMobile
-      ? "3.7：加入學習目的、簡化遊戲規則，並修正 iPhone／iPad 雙擊射擊放大問題。"
-      : "3.7：加入學習目的、簡化遊戲規則，並修正 iPhone／iPad 雙擊射擊放大問題。",
+      ? "3.8：針對 iPhone／iPad 射擊鍵加入 iOS 專用防雙擊放大修正。"
+      : "3.8：針對 iPhone／iPad 射擊鍵加入 iOS 專用防雙擊放大修正。",
     2600
   );
 
