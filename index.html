@@ -998,7 +998,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     aimLines: [],
     periodAlertT: 0,
     periodAlertMax: 4.0,
-    migWaveDone: {}
+    migWaveDone: {},
+    migPressureT: 0
   };
 
   function showBanner(text, kind="info", seconds=1.1){
@@ -2796,6 +2797,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     S.airspaceAlertT = 0;
     S.periodAlertT = S.periodAlertMax;
     S.migWaveDone = {};
+    S.migPressureT = 0;
 
     initBackground();
     updateHUD();
@@ -3097,7 +3099,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
     if(!type){
       if(inSoviet){
-        type = (r<0.42) ? "RADAR" : "AA_FIRE"; // 米格攔截機只按指定距離波次出現
+        // 米格階段後減少其他武器密度：雷達較多，防空火力較少，不再隨機加入米格
+        type = (r<0.68) ? "RADAR" : "AA_FIRE";
       }else{
         type = (r<0.48) ? "RADAR" : "AA_FIRE"; // 米格攔截機只在後段／蘇聯領空後出現
       }
@@ -3113,8 +3116,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
       r: (type==="MIG"? 24 : type==="AA_FIRE"? 25 : 22)*S.dpr,
       hp,
       maxHp: hp,
-      shootCd: type==="MIG" ? rand(0.28,0.55) : rand(0.7,1.4),
-      shootEvery: (type==="MIG"? rand(0.88,1.15) : type==="AA_FIRE" ? rand(1.20,1.60) : rand(2.2,2.9)),
+      shootCd: type==="MIG" ? rand(0.55,0.85) : rand(0.7,1.4),
+      shootEvery: (type==="MIG"? rand(1.25,1.55) : type==="AA_FIRE" ? rand(1.20,1.60) : rand(2.2,2.9)),
       alive:true,
       wob: Math.random()*Math.PI*2,
       flash:0,
@@ -3589,6 +3592,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     S.t += dt;
     if(S.banner.t>0) S.banner.t -= dt;
     if(S.periodAlertT>0) S.periodAlertT = Math.max(0, S.periodAlertT - dt);
+    if(S.migPressureT>0) S.migPressureT = Math.max(0, S.migPressureT - dt);
     if(S.shakeT>0) S.shakeT -= dt;
     for(const l of S.aimLines) l.t -= dt;
     S.aimLines = S.aimLines.filter(l=>l.t>0);
@@ -3658,6 +3662,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
         S.sovietEntered = true;
         S.airspaceAlertT = S.airspaceAlertMax;
         S.airspaceRemainKm = remainKm;
+        S.migPressureT = 7.5; // 米格出現前後暫時減少其他武器，避免過難
         showBanner(`距離終點 ${remainKm} km｜米格攔截機接近`, "bad", 2.0);
         spawnEnemy("MIG");
       }
@@ -3667,10 +3672,17 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     // spawn
     if(S.t % 1 < dt){
       const inSoviet = S.km >= S.sovietKm;
-      const enemyChance = S.practice ? 0.30 : (inSoviet ? 0.58 : 0.44);
+      const migPressure = S.migPressureT > 0;
+
+      // 3.9 balance:
+      // 米格攔截機已是高威脅；米格出現後降低其他敵方威脅，避免同時被雷達／炮台／米格夾擊。
+      const enemyChance = S.practice ? 0.30 : (migPressure ? 0.20 : (inSoviet ? 0.34 : 0.44));
+
       if(Math.random()<enemyChance) spawnEnemy();
-      if(Math.random() < (S.practice?0.40:0.28)) spawnFuel();
-      if(Math.random() < (S.practice?0.26:0.18)) spawnRepair();
+
+      // 米格階段略提高補給機會，令後段仍有機會通關
+      if(Math.random() < (S.practice?0.40:(migPressure?0.34:0.28))) spawnFuel();
+      if(Math.random() < (S.practice?0.26:(migPressure?0.23:0.18))) spawnRepair();
     }
 
     // enemies
@@ -3929,8 +3941,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
   toast(
     isMobile
-      ? "3.8：針對 iPhone／iPad 射擊鍵加入 iOS 專用防雙擊放大修正。"
-      : "3.8：針對 iPhone／iPad 射擊鍵加入 iOS 專用防雙擊放大修正。",
+      ? "3.9：難度平衡修正；米格出現後會減少其他武器密度，並略增加補給機會。"
+      : "3.9：難度平衡修正；米格出現後會減少其他武器密度，並略增加補給機會。",
     2600
   );
 
