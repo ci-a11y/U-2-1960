@@ -575,6 +575,78 @@ html, body{
   }
 }
 
+  
+/* ===== 3.7 Cover Text + iOS Double Tap Zoom Fix ===== */
+.learningAim,
+.simpleRules{
+  margin-top:9px;
+  padding:9px 11px;
+  border-radius:15px;
+  color:rgba(255,255,255,.94);
+  font-size:13px;
+  line-height:1.42;
+}
+.learningAim{
+  background:rgba(105,240,174,.13);
+  border:1px solid rgba(105,240,174,.28);
+}
+.simpleRules{
+  background:rgba(255,255,255,.09);
+  border:1px solid rgba(255,255,255,.14);
+}
+button, .cta, .vbtn, #controls, #controls *, canvas{
+  touch-action:none !important;
+  -webkit-tap-highlight-color:transparent !important;
+}
+@media (max-width: 680px){
+  .learningAim,
+  .simpleRules{
+    margin-top:6px !important;
+    padding:6px 8px !important;
+    font-size:10.8px !important;
+    line-height:1.28 !important;
+    border-radius:12px !important;
+  }
+  .modeNotice{
+    margin-top:6px !important;
+    padding:6px 8px !important;
+    font-size:10.8px !important;
+    line-height:1.25 !important;
+  }
+  .coverGrid .kbox{
+    font-size:10px !important;
+    line-height:1.22 !important;
+    padding:6px !important;
+  }
+}
+@media (max-height: 740px) and (max-width: 680px){
+  .learningAim{
+    max-height:42px;
+    overflow:hidden;
+  }
+  .simpleRules{
+    max-height:58px;
+    overflow:hidden;
+  }
+  .controlHint{
+    display:none !important;
+  }
+}
+@media (max-height: 640px) and (max-width: 680px){
+  .coverEyebrow{
+    display:none !important;
+  }
+  .learningAim{
+    max-height:36px;
+  }
+  .simpleRules{
+    max-height:48px;
+  }
+  .coverGrid{
+    display:none !important;
+  }
+}
+
   </style>
 </head>
 
@@ -674,24 +746,25 @@ html, body{
   <div class="panel coverPanel">
     <div class="coverEyebrow">冷戰知識溫習遊戲｜U-2 高空偵察任務</div>
     <h1>《U-2 偵察機突破任務》</h1>
-    <p class="coverLead">
-      你將操控 <b>U-2 偵察機</b> 穿越冷戰防空網。遊戲目的是在完成飛行任務的同時，重溫冷戰的重要史實、時序、因果和概念。
-    </p>
+
+    <div class="learningAim">
+      <b>學習目的</b><br/>
+      透過遊戲重溫冷戰發展，辨識不同時期的重要史實，並理解情報戰、軍備競賽、地區衝突及緩和如何反映美蘇對抗。
+    </div>
+
+    <div class="simpleRules">
+      <b>遊戲規則</b><br/>
+      中彈：扣機身。<br/>
+      撞到敵方威脅：扣損耗。<br/>
+      取得燃料補給／損耗維修：答一條冷戰 MC，答啱可補充狀態。
+    </div>
 
     <div class="modeNotice">
       <b>請先選擇遊戲模式，任務才會開始。</b><br/>
-      建議一般課堂先用「簡易版」，考前或挑戰可用「困難版」。
+      簡易版會集中一個時段；困難版會混合所有時段。
     </div>
 
     <div class="grid2 coverGrid">
-      <div class="kbox">
-        <b>遊戲目的</b><br/>
-        透過飛行、補給與任務檢核，溫習冷戰知識。完成後會顯示任務報告。
-      </div>
-      <div class="kbox">
-        <b>出題說明</b><br/>
-        取得燃料補給或損耗維修後會出現 MC 題。答啱可獲補給效果。
-      </div>
       <div class="kbox">
         <b>簡易版</b><br/>
         隨機抽 1 個時段出題，例如早期冷戰、緩和時期或冷戰後期。
@@ -711,7 +784,7 @@ html, body{
       <button class="cta secondary" id="startBtn">開始困難版｜全時段混合</button>
       <button class="cta secondary" id="practiceBtn">只練題｜安全模式</button>
     </div>
-    <div class="tiny">請選擇以上其中一個模式開始遊戲。</div>
+    <div class="tiny">完成後會顯示任務報告，總結答題表現與可重溫重點。</div>
   </div>
 </div>
 
@@ -782,6 +855,25 @@ html, body{
   // Reduce browser gesture conflicts
   canvas.style.touchAction = "none";
   joystick.style.touchAction = "none";
+
+  // 3.7: Stronger iOS/iPadOS double-tap zoom prevention for rapid fire button taps.
+  // Keep this global because Safari may zoom from double-tap even when the target is inside controls.
+  let lastTouchEnd = 0;
+  document.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 320) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive:false });
+
+  document.addEventListener("dblclick", (e) => {
+    e.preventDefault();
+  }, { passive:false });
+
+  document.addEventListener("gesturestart", (e) => {
+    e.preventDefault();
+  }, { passive:false });
 
   // Best-effort portrait lock (iOS may ignore)
   async function tryLockPortrait(){
@@ -3719,8 +3811,8 @@ html, body{
 
   toast(
     isMobile
-      ? "3.6：封面已清楚顯示遊戲目的、出題說明及簡易／困難模式。"
-      : "3.6：封面已清楚顯示遊戲目的、出題說明及簡易／困難模式。",
+      ? "3.7：加入學習目的、簡化遊戲規則，並修正 iPhone／iPad 雙擊射擊放大問題。"
+      : "3.7：加入學習目的、簡化遊戲規則，並修正 iPhone／iPad 雙擊射擊放大問題。",
     2600
   );
 
