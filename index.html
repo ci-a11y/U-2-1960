@@ -695,7 +695,6 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
           <span class="tag" id="invertTag" style="display:none;">上下反轉中</span>
           <span class="tag" id="invulTag" style="display:none;">短暫無敵</span>
           <span class="tag" id="periodTag" style="display:none;">題庫：—</span>
-          <span class="tag" id="damageSlowTag" style="display:none;">中彈受損｜戰機減速</span>
         </div>
         <small>中彈扣機身｜燃料補給／損耗維修需完成任務檢核｜撞擊扣損耗</small>
       </div>
@@ -842,7 +841,6 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
   const invertTag = document.getElementById('invertTag');
   const invulTag = document.getElementById('invulTag');
   const periodTag = document.getElementById('periodTag');
-  const damageSlowTag = document.getElementById('damageSlowTag');
 
   // Overlays
   const overlay = document.getElementById('screenOverlay');
@@ -1015,7 +1013,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     periodAlertT: 0,
     periodAlertMax: 4.0,
     migWaveDone: {},
-    migPressureT: 0
+    migPressureT: 0,
+    damagePopupT: 0
   };
 
   function showBanner(text, kind="info", seconds=1.1){
@@ -2814,6 +2813,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     S.periodAlertT = S.periodAlertMax;
     S.migWaveDone = {};
     S.migPressureT = 0;
+    S.damagePopupT = 0;
 
     initBackground();
     updateHUD();
@@ -3067,7 +3067,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     const delta = S.p.maxHull/6;
     S.p.hull = clamp(S.p.hull - delta, 0, S.p.maxHull);
     spawnExplosion(x,y, 0.9, true);
-    showBanner("中彈受損｜戰機減速", "bad", 1.4);
+    showBanner("中彈受損｜戰機減速", "bad", 1.0);
+    S.damagePopupT = 2.2;
     applyControlSlow(5);
 
     // small penalty (mixed mode)
@@ -3542,6 +3543,32 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     ctx.restore();
   }
 
+  function drawDamagePopup(){
+    if(S.damagePopupT<=0 && S.slowTimer<=0) return;
+    const d=S.dpr, W=S.view.W, H=S.view.H;
+    const remain = Math.max(0, Math.ceil(S.slowTimer));
+    const alpha = S.damagePopupT>0 ? Math.min(1, S.damagePopupT/0.35) : 0.72;
+    const msg = remain>0 ? `中彈受損｜戰機減速 ${remain}s` : "中彈受損｜戰機減速";
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font=`900 ${Math.min(18*d, W*0.048)}px system-ui`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    const tw = ctx.measureText(msg).width;
+    const x = W*0.5;
+    const y = H*0.68;
+    ctx.fillStyle="rgba(145,0,0,0.68)";
+    ctx.strokeStyle="rgba(255,255,255,0.25)";
+    ctx.lineWidth=1.5*d;
+    ctx.beginPath();
+    ctx.roundRect(x - tw/2 - 15*d, y - 18*d, tw + 30*d, 36*d, 16*d);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle="#fff";
+    ctx.fillText(msg, x, y);
+    ctx.restore();
+  }
+
   function drawAirspaceWarning(){
     if(S.airspaceAlertT<=0) return;
     const d=S.dpr, W=S.view.W, H=S.view.H;
@@ -3609,6 +3636,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     if(S.banner.t>0) S.banner.t -= dt;
     if(S.periodAlertT>0) S.periodAlertT = Math.max(0, S.periodAlertT - dt);
     if(S.migPressureT>0) S.migPressureT = Math.max(0, S.migPressureT - dt);
+    if(S.damagePopupT>0) S.damagePopupT = Math.max(0, S.damagePopupT - dt);
     if(S.shakeT>0) S.shakeT -= dt;
     for(const l of S.aimLines) l.t -= dt;
     S.aimLines = S.aimLines.filter(l=>l.t>0);
@@ -3633,10 +3661,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     }else{
       slowTag.textContent = "操控減速中";
     }
-    if(damageSlowTag){
-      damageSlowTag.style.display = S.slowTimer>0 ? "inline-flex":"none";
-      damageSlowTag.textContent = S.slowTimer>0 ? `中彈受損｜戰機減速 ${Math.ceil(S.slowTimer)}s` : "中彈受損｜戰機減速";
-    }
+
     invulTag.style.display  = S.invul>0 ? "inline-flex":"none";
 
     // fuel drain
@@ -3926,6 +3951,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     drawPlane();
     drawParticles();
     drawBanner();
+    drawDamagePopup();
     drawPeriodAlert();
     drawAirspaceWarning();
 
@@ -3933,41 +3959,23 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
       const W=S.view.W, H=S.view.H;
       const remain=Math.max(0,S.goalKm-S.km);
       const isNarrow = (innerWidth <= 680);
+      const label = `距離終點：約 ${Math.ceil(remain)} km`;
       ctx.save();
+      ctx.font=`700 ${isNarrow ? 11.5*S.dpr : 14*S.dpr}px system-ui`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      const tw = ctx.measureText(label).width;
 
       if(isNarrow){
-        // 手機版：改為左中直排，避開上方 HUD、右下射擊掣與左下搖桿
-        const x = 18*S.dpr;
-        const y = H*0.47;
-        const boxW = 42*S.dpr;
-        const boxH = 126*S.dpr;
+        // 手機版：正下方中央，位於搖桿與射擊掣之間上方，避開上方 HUD
+        const boxY = H - 112*S.dpr;
         ctx.fillStyle="rgba(0,0,0,0.50)";
         ctx.beginPath();
-        ctx.roundRect(x, y - boxH/2, boxW, boxH, 15*S.dpr);
+        ctx.roundRect(W*0.5 - tw/2 - 10*S.dpr, boxY - 12*S.dpr, tw + 20*S.dpr, 24*S.dpr, 12*S.dpr);
         ctx.fill();
-
         ctx.fillStyle="rgba(255,255,255,0.95)";
-        ctx.textAlign="center";
-        ctx.textBaseline="middle";
-        ctx.font=`800 ${11*S.dpr}px system-ui`;
-        ctx.fillText("距", x + boxW/2, y - 46*S.dpr);
-        ctx.fillText("離", x + boxW/2, y - 30*S.dpr);
-        ctx.fillText("終", x + boxW/2, y - 14*S.dpr);
-        ctx.fillText("點", x + boxW/2, y + 2*S.dpr);
-
-        ctx.font=`900 ${15*S.dpr}px system-ui`;
-        ctx.fillStyle="#ffe066";
-        ctx.fillText(`${Math.ceil(remain)}`, x + boxW/2, y + 27*S.dpr);
-
-        ctx.font=`800 ${10*S.dpr}px system-ui`;
-        ctx.fillStyle="rgba(255,255,255,0.92)";
-        ctx.fillText("km", x + boxW/2, y + 48*S.dpr);
+        ctx.fillText(label, W*0.5, boxY);
       }else{
         const boxY = 64*S.dpr;
-        const label = `距離終點：約 ${Math.ceil(remain)} km`;
-        ctx.font=`700 ${14*S.dpr}px system-ui`;
-        ctx.textAlign="center"; ctx.textBaseline="middle";
-        const tw = ctx.measureText(label).width;
         ctx.fillStyle="rgba(0,0,0,0.52)";
         ctx.beginPath();
         ctx.roundRect(W*0.5 - tw/2 - 10*S.dpr, boxY - 12*S.dpr, tw + 20*S.dpr, 24*S.dpr, 12*S.dpr);
@@ -4007,8 +4015,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
   toast(
     isMobile
-      ? "4.2：手機版距離終點改為左中直排，避免遮住操作與 HUD。"
-      : "4.2：手機版距離終點改為左中直排，避免遮住操作與 HUD。",
+      ? "4.3：手機版距離移至正下方；中彈減速改為小警告彈出。"
+      : "4.3：手機版距離移至正下方；中彈減速改為小警告彈出。",
     2600
   );
 
