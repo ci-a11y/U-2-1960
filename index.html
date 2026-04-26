@@ -3933,18 +3933,49 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
       const W=S.view.W, H=S.view.H;
       const remain=Math.max(0,S.goalKm-S.km);
       const isNarrow = (innerWidth <= 680);
-      const boxY = isNarrow ? H - 185*S.dpr : 64*S.dpr; // 手機版移到下方，避開上方 HUD
-      const label = `距離終點：約 ${Math.ceil(remain)} km`;
       ctx.save();
-      ctx.font=`700 ${isNarrow ? 11.5*S.dpr : 14*S.dpr}px system-ui`;
-      ctx.textAlign="center"; ctx.textBaseline="middle";
-      const tw = ctx.measureText(label).width;
-      ctx.fillStyle="rgba(0,0,0,0.52)";
-      ctx.beginPath();
-      ctx.roundRect(W*0.5 - tw/2 - 10*S.dpr, boxY - 12*S.dpr, tw + 20*S.dpr, 24*S.dpr, 12*S.dpr);
-      ctx.fill();
-      ctx.fillStyle="rgba(255,255,255,0.95)";
-      ctx.fillText(label, W*0.5, boxY);
+
+      if(isNarrow){
+        // 手機版：改為左中直排，避開上方 HUD、右下射擊掣與左下搖桿
+        const x = 18*S.dpr;
+        const y = H*0.47;
+        const boxW = 42*S.dpr;
+        const boxH = 126*S.dpr;
+        ctx.fillStyle="rgba(0,0,0,0.50)";
+        ctx.beginPath();
+        ctx.roundRect(x, y - boxH/2, boxW, boxH, 15*S.dpr);
+        ctx.fill();
+
+        ctx.fillStyle="rgba(255,255,255,0.95)";
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+        ctx.font=`800 ${11*S.dpr}px system-ui`;
+        ctx.fillText("距", x + boxW/2, y - 46*S.dpr);
+        ctx.fillText("離", x + boxW/2, y - 30*S.dpr);
+        ctx.fillText("終", x + boxW/2, y - 14*S.dpr);
+        ctx.fillText("點", x + boxW/2, y + 2*S.dpr);
+
+        ctx.font=`900 ${15*S.dpr}px system-ui`;
+        ctx.fillStyle="#ffe066";
+        ctx.fillText(`${Math.ceil(remain)}`, x + boxW/2, y + 27*S.dpr);
+
+        ctx.font=`800 ${10*S.dpr}px system-ui`;
+        ctx.fillStyle="rgba(255,255,255,0.92)";
+        ctx.fillText("km", x + boxW/2, y + 48*S.dpr);
+      }else{
+        const boxY = 64*S.dpr;
+        const label = `距離終點：約 ${Math.ceil(remain)} km`;
+        ctx.font=`700 ${14*S.dpr}px system-ui`;
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle="rgba(0,0,0,0.52)";
+        ctx.beginPath();
+        ctx.roundRect(W*0.5 - tw/2 - 10*S.dpr, boxY - 12*S.dpr, tw + 20*S.dpr, 24*S.dpr, 12*S.dpr);
+        ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,0.95)";
+        ctx.fillText(label, W*0.5, boxY);
+      }
+
       ctx.restore();
     }
 
@@ -3976,8 +4007,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
   toast(
     isMobile
-      ? "4.1：手機版距離終點提示移到下方，避免遮住上方 HUD。"
-      : "4.1：手機版距離終點提示移到下方，避免遮住上方 HUD。",
+      ? "4.2：手機版距離終點改為左中直排，避免遮住操作與 HUD。"
+      : "4.2：手機版距離終點改為左中直排，避免遮住操作與 HUD。",
     2600
   );
 
