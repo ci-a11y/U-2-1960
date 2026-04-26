@@ -3933,10 +3933,10 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
       const W=S.view.W, H=S.view.H;
       const remain=Math.max(0,S.goalKm-S.km);
       const isNarrow = (innerWidth <= 680);
-      const boxY = isNarrow ? 100*S.dpr : 64*S.dpr; // iPhone 避開上方 HUD
+      const boxY = isNarrow ? H - 185*S.dpr : 64*S.dpr; // 手機版移到下方，避開上方 HUD
       const label = `距離終點：約 ${Math.ceil(remain)} km`;
       ctx.save();
-      ctx.font=`700 ${isNarrow ? 12*S.dpr : 14*S.dpr}px system-ui`;
+      ctx.font=`700 ${isNarrow ? 11.5*S.dpr : 14*S.dpr}px system-ui`;
       ctx.textAlign="center"; ctx.textBaseline="middle";
       const tw = ctx.measureText(label).width;
       ctx.fillStyle="rgba(0,0,0,0.52)";
@@ -3976,8 +3976,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
   toast(
     isMobile
-      ? "4.0：修正 iPhone 距離顯示位置，並加入中彈減速倒計時提示。"
-      : "4.0：修正 iPhone 距離顯示位置，並加入中彈減速倒計時提示。",
+      ? "4.1：手機版距離終點提示移到下方，避免遮住上方 HUD。"
+      : "4.1：手機版距離終點提示移到下方，避免遮住上方 HUD。",
     2600
   );
 
