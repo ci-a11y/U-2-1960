@@ -676,6 +676,232 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
   }
 }
 
+  
+/* ===== Final + Leaderboard ===== */
+.nameBox{
+  margin-top:12px;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+}
+.nameBox label{
+  display:block;
+  font-size:13px;
+  margin-bottom:6px;
+  color:rgba(255,255,255,.9);
+}
+.nameRow{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.nameRow input{
+  flex:1;
+  min-width:0;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(0,0,0,.32);
+  color:#fff;
+  border-radius:14px;
+  padding:11px 12px;
+  font-size:15px;
+  outline:none;
+}
+.nameRow input::placeholder{ color:rgba(255,255,255,.45); }
+.smallBtn{
+  border:0;
+  border-radius:14px;
+  padding:11px 14px;
+  font-weight:800;
+  color:#06111c;
+  background:linear-gradient(180deg,#69f0ae,#23c7ff);
+  cursor:pointer;
+}
+.nameMsg{
+  margin-top:7px;
+  font-size:12px;
+  min-height:16px;
+  color:rgba(255,255,255,.78);
+}
+.nameMsg.bad{ color:#ffb4b4; }
+.leaderboardBox{
+  margin-top:12px;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(0,0,0,.24);
+  border:1px solid rgba(255,255,255,.12);
+}
+.leaderboardTitle{
+  font-weight:900;
+  margin-bottom:8px;
+}
+.leaderList{
+  display:grid;
+  gap:5px;
+  font-size:13px;
+}
+.leaderRow{
+  display:grid;
+  grid-template-columns:32px 1fr 70px;
+  gap:8px;
+  align-items:center;
+  padding:6px 8px;
+  border-radius:12px;
+  background:rgba(255,255,255,.06);
+}
+.leaderRow.current{
+  background:rgba(105,240,174,.16);
+  border:1px solid rgba(105,240,174,.28);
+}
+.leaderRank{
+  font-weight:900;
+  color:#ffe066;
+}
+.leaderScore{
+  text-align:right;
+  font-weight:900;
+}
+.leaderMeta{
+  font-size:11px;
+  color:rgba(255,255,255,.55);
+}
+@media (max-width:680px){
+  .nameBox,.leaderboardBox{
+    padding:9px;
+    margin-top:8px;
+    border-radius:14px;
+  }
+  .nameRow input{
+    font-size:13px;
+    padding:9px 10px;
+  }
+  .smallBtn{
+    padding:9px 10px;
+    font-size:12px;
+  }
+  .leaderList{
+    font-size:12px;
+    gap:4px;
+  }
+  .leaderRow{
+    grid-template-columns:26px 1fr 56px;
+    padding:5px 6px;
+  }
+}
+
+  
+/* ===== Leaderboard v2: pre-name, separated boards, local admin ===== */
+.preNameBox{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+}
+.preNameBox label{
+  display:block;
+  font-size:13px;
+  margin-bottom:6px;
+  color:rgba(255,255,255,.9);
+}
+.preNameBox input{
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(0,0,0,.32);
+  color:#fff;
+  border-radius:14px;
+  padding:10px 12px;
+  font-size:15px;
+  outline:none;
+}
+.boardTabs{
+  display:flex;
+  gap:6px;
+  margin-bottom:8px;
+}
+.boardTab{
+  flex:1;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:12px;
+  padding:7px 9px;
+  color:#fff;
+  background:rgba(255,255,255,.08);
+  font-weight:800;
+  cursor:pointer;
+}
+.boardTab.active{
+  background:rgba(105,240,174,.20);
+  border-color:rgba(105,240,174,.40);
+  color:#eafff5;
+}
+.adminRow{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+}
+.miniAdminBtn{
+  flex:1;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border-radius:12px;
+  padding:7px 8px;
+  font-weight:800;
+  cursor:pointer;
+  font-size:12px;
+}
+.miniAdminBtn.danger{
+  border-color:rgba(255,120,120,.28);
+  background:rgba(255,80,80,.13);
+}
+.adminPanel{
+  margin-top:8px;
+  padding:8px;
+  border-radius:14px;
+  background:rgba(0,0,0,.28);
+  border:1px solid rgba(255,255,255,.12);
+}
+.adminItem{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:6px 4px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.adminItem:last-child{ border-bottom:0; }
+.deleteEntryBtn{
+  border:0;
+  border-radius:10px;
+  padding:6px 8px;
+  background:rgba(255,80,80,.18);
+  color:#ffd6d6;
+  font-weight:900;
+  cursor:pointer;
+}
+.coverBoard{
+  margin-top:10px;
+}
+@media (max-width:680px){
+  .preNameBox{
+    margin-top:6px;
+    padding:7px 8px;
+    border-radius:13px;
+  }
+  .preNameBox label{
+    font-size:10.8px;
+    margin-bottom:4px;
+  }
+  .preNameBox input{
+    font-size:12.5px;
+    padding:8px 9px;
+  }
+  .coverBoard{
+    display:none !important;
+  }
+}
+
   </style>
 </head>
 
@@ -808,12 +1034,33 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
       手機／iPad：左下搖桿移動，右下按鈕射擊｜電腦：方向鍵移動，Space 射擊
     </div>
 
+    <div class="preNameBox">
+      <label for="prePlayerName"><b>玩家名字</b>（開始前必須輸入）</label>
+      <input id="prePlayerName" maxlength="12" autocomplete="off" placeholder="例如：3A陳同學" />
+      <div class="nameMsg" id="preNameMsg"></div>
+    </div>
+
     <div class="ctaRow">
       <button class="cta" id="easyBtn">開始簡易版｜隨機抽 1 個時段</button>
       <button class="cta secondary" id="startBtn">開始困難版｜全時段混合</button>
       <button class="cta secondary" id="practiceBtn">只練題｜安全模式</button>
     </div>
-    <div class="tiny">完成後會顯示任務報告，總結答題表現與可重溫重點。</div>
+
+    <div class="leaderboardBox coverBoard">
+      <div class="leaderboardTitle">🏆 本機龍虎榜</div>
+      <div class="boardTabs">
+        <button class="boardTab active" data-board-tab="easy">簡易版</button>
+        <button class="boardTab" data-board-tab="hard">困難版</button>
+      </div>
+      <div id="coverLeaderboardContent"></div>
+      <div class="adminRow">
+        <button class="miniAdminBtn" id="adminRefreshBtn">更新榜單</button>
+        <button class="miniAdminBtn danger" id="adminManageBtn">管理／刪除本機紀錄</button>
+      </div>
+      <div id="adminPanel" class="adminPanel" style="display:none;"></div>
+    </div>
+
+    <div class="tiny">完成後會顯示任務報告，並自動儲存至對應模式龍虎榜。</div>
   </div>
 </div>
 
@@ -974,6 +1221,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
     quizMode: "easy",           // easy = 隨機抽 1 個時段；hard = 全時段
     selectedPeriod: null,        // 本局簡易版抽中的時段
     selectedPeriodLabel: "全時段混合",
+    playerName: "",
 
     // ===== SCORE SYSTEM (C: mixed) =====
     score: 0,
@@ -2825,8 +3073,16 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
   }
 
   function start(practice, mode="easy"){
+    // 封面開始：讀取輸入名字；任務報告「再玩一次」：沿用上一局玩家名字
+    let playerName = S.playerName || "";
+    if(document.getElementById('prePlayerName')){
+      playerName = validatePreName();
+      if(!playerName) return;
+    }
+
     S.practice=!!practice;
     S.quizMode = mode;
+    S.playerName = playerName;
 
     if(mode === "easy"){
       S.selectedPeriod = pickRandomPeriod();
@@ -2850,6 +3106,204 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
   easyBtn.onclick=()=>start(false, "easy");
   startBtn.onclick=()=>start(false, "hard");
   practiceBtn.onclick=()=>start(true, "easy");
+  setTimeout(()=>initCoverBoardControls(), 0);
+
+  const prePlayerName = document.getElementById('prePlayerName');
+  if(prePlayerName){
+    prePlayerName.addEventListener("input", ()=>{
+      const msg = document.getElementById('preNameMsg');
+      if(msg){
+        msg.textContent = "";
+        msg.classList.remove("bad");
+      }
+    });
+  }
+
+
+  // ===== Local leaderboard =====
+  const LEADERBOARD_PREFIX = "u2ColdWarLeaderboard.v2.";
+
+  function boardKey(mode){
+    return mode === "hard" ? "hard" : "easy";
+  }
+
+  function boardTitle(mode){
+    return boardKey(mode) === "hard" ? "困難版" : "簡易版";
+  }
+
+  function storageKey(mode){
+    return LEADERBOARD_PREFIX + boardKey(mode);
+  }
+
+  function loadLeaderboard(mode="easy"){
+    try{
+      const data = JSON.parse(localStorage.getItem(storageKey(mode)) || "[]");
+      return Array.isArray(data) ? data : [];
+    }catch(e){
+      return [];
+    }
+  }
+
+  function saveLeaderboard(list, mode="easy"){
+    try{
+      localStorage.setItem(storageKey(mode), JSON.stringify(list.slice(0,10)));
+    }catch(e){}
+  }
+
+  function cleanPlayerName(raw){
+    let name = String(raw || "").trim();
+    name = name.replace(/\s+/g, " ");
+    name = name.replace(/[^\u4e00-\u9fffA-Za-z0-9 _\-．.]/g, "");
+    if(name.length > 12) name = name.slice(0,12);
+    return name;
+  }
+
+  function isBadPlayerName(raw){
+    const name = String(raw || "").toLowerCase().replace(/\s+/g,"");
+    if(!name) return true;
+    if(name.length < 2) return true;
+
+    const badPatterns = [
+      /屌|吊|撚|柒|鳩|閪|仆街|冚家|冚家剷|死全家|賤種|狗娘|含家/i,
+      /fuck|fuk|fck|shit|bitch|bastard|asshole|dick|cock|pussy|cunt|whore|slut/i,
+      /sex|porn|porno|xxx|av女優|做愛|性交|口交|肛交|打飛機|自慰|雞巴|龜頭|陰莖|陰道|乳交|強姦/i,
+      /nazi|hitler|希特拉萬歲|納粹萬歲|kkk|isis|terrorist/i,
+      /死肥|死矮|智障|弱智|白痴|低能|痴線|傻閪/i,
+      /自殺|殺人|炸彈|吸毒|可卡因|冰毒|海洛因/i
+    ];
+
+    return badPatterns.some(rx => rx.test(name));
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, ch => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[ch]));
+  }
+
+  function addLeaderboardEntry(name, score, meta="", mode="easy"){
+    const entry = {
+      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      name,
+      score: Math.max(0, Math.floor(score || 0)),
+      meta,
+      date: new Date().toLocaleDateString("zh-HK")
+    };
+    const list = loadLeaderboard(mode);
+    list.push(entry);
+    list.sort((a,b)=> b.score - a.score);
+    const top = list.slice(0,10);
+    saveLeaderboard(top, mode);
+    return entry.id;
+  }
+
+  function renderLeaderboard(currentId="", mode="easy"){
+    const list = loadLeaderboard(mode);
+    if(!list.length){
+      return `<div class="leaderList"><div class="leaderMeta">暫時未有紀錄。輸入名字後可儲存本機頭 10 名。</div></div>`;
+    }
+
+    return `
+      <div class="leaderList">
+        ${list.map((e,i)=>`
+          <div class="leaderRow ${e.id===currentId ? "current":""}">
+            <div class="leaderRank">#${i+1}</div>
+            <div>
+              <div>${escapeHtml(e.name)}</div>
+              <div class="leaderMeta">${escapeHtml(e.meta || "")}${e.date ? "｜"+escapeHtml(e.date):""}</div>
+            </div>
+            <div class="leaderScore">${Math.floor(e.score)}</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+
+  function renderAdminPanel(mode="easy"){
+    const list = loadLeaderboard(mode);
+    if(!list.length) return `<div class="leaderMeta">暫時沒有${boardTitle(mode)}紀錄。</div>`;
+    return `
+      <div class="leaderMeta">管理：${boardTitle(mode)}本機紀錄</div>
+      ${list.map((e,i)=>`
+        <div class="adminItem">
+          <div>
+            <b>#${i+1} ${escapeHtml(e.name)}</b>｜${Math.floor(e.score)}分
+            <div class="leaderMeta">${escapeHtml(e.meta || "")}${e.date ? "｜"+escapeHtml(e.date):""}</div>
+          </div>
+          <button class="deleteEntryBtn" data-delete-id="${escapeHtml(e.id)}" data-delete-mode="${boardKey(mode)}">刪除</button>
+        </div>
+      `).join("")}
+    `;
+  }
+
+  let coverBoardMode = "easy";
+
+  function refreshCoverLeaderboard(){
+    const el = document.getElementById('coverLeaderboardContent');
+    if(el) el.innerHTML = renderLeaderboard("", coverBoardMode);
+    document.querySelectorAll('[data-board-tab]').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.boardTab === coverBoardMode);
+    });
+    const adminPanel = document.getElementById('adminPanel');
+    if(adminPanel && adminPanel.style.display !== "none"){
+      adminPanel.innerHTML = renderAdminPanel(coverBoardMode);
+      bindAdminDeleteButtons();
+    }
+  }
+
+  function bindAdminDeleteButtons(){
+    document.querySelectorAll('[data-delete-id]').forEach(btn=>{
+      btn.onclick=()=>{
+        const mode = btn.dataset.deleteMode || "easy";
+        const id = btn.dataset.deleteId;
+        const list = loadLeaderboard(mode).filter(e=>e.id !== id);
+        saveLeaderboard(list, mode);
+        refreshCoverLeaderboard();
+      };
+    });
+  }
+
+  function initCoverBoardControls(){
+    document.querySelectorAll('[data-board-tab]').forEach(btn=>{
+      btn.onclick=()=>{
+        coverBoardMode = btn.dataset.boardTab || "easy";
+        refreshCoverLeaderboard();
+      };
+    });
+    const refreshBtn = document.getElementById('adminRefreshBtn');
+    if(refreshBtn) refreshBtn.onclick=()=>refreshCoverLeaderboard();
+
+    const manageBtn = document.getElementById('adminManageBtn');
+    const adminPanel = document.getElementById('adminPanel');
+    if(manageBtn && adminPanel){
+      manageBtn.onclick=()=>{
+        adminPanel.style.display = adminPanel.style.display === "none" ? "block" : "none";
+        refreshCoverLeaderboard();
+      };
+    }
+    refreshCoverLeaderboard();
+  }
+
+  function validatePreName(){
+    const input = document.getElementById('prePlayerName');
+    const msg = document.getElementById('preNameMsg');
+    const cleaned = cleanPlayerName(input ? input.value : "");
+    if(!input) return "";
+    input.value = cleaned;
+    if(isBadPlayerName(cleaned)){
+      if(msg){
+        msg.textContent = "名字不合規，請重新輸入。";
+        msg.classList.add("bad");
+      }
+      return "";
+    }
+    if(msg){
+      msg.textContent = "名字可用。";
+      msg.classList.remove("bad");
+    }
+    return cleaned;
+  }
 
   function end(win){
     S.running=false;
@@ -2909,6 +3363,12 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
             ${periodFocusText()}
           </div>
         </div>
+        <div class="leaderboardBox">
+          <div class="leaderboardTitle">🏆 ${boardTitle(S.quizMode)}玩家龍虎榜 TOP 10</div>
+          <div id="leaderboardContent"></div>
+          <div class="nameMsg" id="nameMsg">玩家：${escapeHtml(S.playerName || "未命名")}｜分數已自動記錄到${boardTitle(S.quizMode)}龍虎榜。</div>
+        </div>
+
         <div class="ctaRow">
           <button class="cta secondary" id="replayBtn">再玩一次</button>
           <button class="cta" id="replayPracticeBtn">只練題（安全模式）</button>
@@ -2916,6 +3376,14 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
       </div>
     `;
     overlay.classList.remove('hidden');
+
+    const nameMsg = document.getElementById('nameMsg');
+    const leaderboardContent = document.getElementById('leaderboardContent');
+    const meta = `${win ? "完成任務" : "任務失敗"}｜${S.selectedPeriodLabel}`;
+    const id = addLeaderboardEntry(S.playerName || "未命名", S.score, meta, S.quizMode || "easy");
+    leaderboardContent.innerHTML = renderLeaderboard(id, S.quizMode || "easy");
+    if(nameMsg) nameMsg.classList.remove("bad");
+
     document.getElementById('replayBtn').onclick=()=>start(false, S.quizMode || "easy");
     document.getElementById('replayPracticeBtn').onclick=()=>start(true, "easy");
   }
@@ -3116,10 +3584,10 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
     if(!type){
       if(inSoviet){
-        // 米格階段後減少其他武器密度：雷達較多，防空火力較少，不再隨機加入米格
-        type = (r<0.68) ? "RADAR" : "AA_FIRE";
+        // 米格階段後仍減少總武器密度，但略增加防空火力比例，令戰鬥感更明顯
+        type = (r<0.58) ? "RADAR" : "AA_FIRE";
       }else{
-        type = (r<0.48) ? "RADAR" : "AA_FIRE"; // 米格攔截機只在後段／蘇聯領空後出現
+        type = (r<0.42) ? "RADAR" : "AA_FIRE"; // 前中段略增加防空火力
       }
     }
 
@@ -3726,7 +4194,7 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
       // 3.9 balance:
       // 米格攔截機已是高威脅；米格出現後降低其他敵方威脅，避免同時被雷達／炮台／米格夾擊。
-      const enemyChance = S.practice ? 0.30 : (migPressure ? 0.20 : (inSoviet ? 0.34 : 0.44));
+      const enemyChance = S.practice ? 0.30 : (migPressure ? 0.22 : (inSoviet ? 0.38 : 0.48));
 
       if(Math.random()<enemyChance) spawnEnemy();
 
@@ -4035,8 +4503,8 @@ html, body, #wrap, canvas, #controls, #controls *, #joystick, #stick, .vbtn{
 
   toast(
     isMobile
-      ? "Final：手機版距離終點改為左中直排；保留中彈減速小警告彈出。"
-      : "Final：手機版距離終點改為左中直排；保留中彈減速小警告彈出。",
+      ? "Final++ v5：修正任務報告「再玩一次」按鈕無反應問題。"
+      : "Final++ v5：修正任務報告「再玩一次」按鈕無反應問題。",
     2600
   );
 
